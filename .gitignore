@@ -1,0 +1,28 @@
+# Ignore Node.js dependencies for both front-end and back-end
+front-end/node_modules/
+back-end/node_modules/
+
+# Ignore build output for Next.js (front-end)
+front-end/.next/
+front-end/out/
+
+# Ignore build output for back-end (e.g., TypeScript compiled files)
+back-end/dist/
+
+# Ignore environment files
+front-end/.env
+back-end/.env
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Editors and IDEs
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
