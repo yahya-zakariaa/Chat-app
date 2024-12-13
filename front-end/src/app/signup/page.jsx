@@ -12,20 +12,13 @@ export default function Signup() {
   const router = useRouter();
 
   const handleSubmit = async (values) => {
-    console.log("gall");
-
     try {
       const res = await signUp(values.name, values.email, values.password);
-      console.log(res);
 
       if (res?.status === 201) {
-        console.log("hallo");
-
         router.push("/login");
       }
-    } catch (error) {
-      console.log(error);
-    }
+    } catch (error) {}
   };
 
   const validationSchema = yup.object().shape({
@@ -34,7 +27,10 @@ export default function Signup() {
       .min(3, "name must be at least 6 chart")
       .max(20, "name must be at most 20 chart")
       .required("Name is required"),
-    email: yup.string().email("Email is invalid").required("Email is required"),
+    email: yup
+      .string()
+      .matches(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/, "Invalid email")
+      .required("Email is required"),
     password: yup
       .string()
       .min(6, "Password must be at least 6 chart")
@@ -57,14 +53,6 @@ export default function Signup() {
   });
   return (
     <section className="bg-gray-50 dark:bg-gray-900 w-full  ">
-       {isUpdatingProfile ? (
-          <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-60 z-[999999]">
-            <div className="w-[300px] flex items-center justify-center flex-col gap-4 h-[200px] top-[50%] left-[50%] translate-x-[-50%] translate-y-[-60%] rounded-lg bg-gray-900 absolute z-[99999]">
-              <span className="loader"></span>
-              <h4 className="text-[18px] font-bold">update picture..</h4>
-            </div>
-          </div>
-        ) : null}
       <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto min-h-screen lg:py-0 h-auto">
         <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
           <h1 className="text-xl font-bold leading-tight tracking-tight mt-5 text-center text-gray-900 md:text-3xl dark:text-white">

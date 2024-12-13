@@ -14,19 +14,19 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: [true, "password is required"],
-      minLingth: [6, "password must be at least 6 characters"],
+      minLength: [6, "password must be at least 6 characters"],
     },
     avatar: {
       type: String,
+      default: "",
     },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
-    updatedAt: {
-      type: Date,
-      default: Date.now,
-    },
+    friends: [
+      {
+        id: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        username: { type: String },
+        avatar: { type: String },
+      },
+    ],
   },
   { timestamps: true }
 );

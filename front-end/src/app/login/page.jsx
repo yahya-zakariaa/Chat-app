@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { useFormik } from "formik";
+import Link from "next/link";
 import * as yup from "yup";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -20,7 +21,7 @@ export default function Login() {
   };
 
   const validationSchema = yup.object().shape({
-    email: yup.string().email("Email is invalid").required("Email is required"),
+    email: yup.string().matches(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/, "Invalid email").required("Email is required"),
     password: yup.string().required("Password is required"),
   });
   const Formik = useFormik({
@@ -125,12 +126,12 @@ export default function Login() {
                 </div>
               </div>
               <div className="flex items-center justify-end">
-                <a
-                  href="#"
+                <Link
+                  href={"/forgot-password"}
                   className="text-sm font-medium text-primary-600 hover:underline dark:text-primary-500"
                 >
                   Forgot password?
-                </a>
+                </Link>
               </div>
               <button
                 disabled={!Formik.isValid || isLoggingIn}
@@ -141,12 +142,12 @@ export default function Login() {
               </button>
               <p className="text-sm font-light text-gray-500 dark:text-gray-400">
                 Don’t have an account yet ?{" "}
-                <a
+                <Link
                   href={"/signup"}
                   className="font-medium text-blue-500 hover:underline dark:text-primary-500"
                 >
                   Sign up
-                </a>
+                </Link>
               </p>
             </form>
           </div>

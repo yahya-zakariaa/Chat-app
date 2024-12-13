@@ -2,12 +2,14 @@
 import React from "react";
 import defaultAvatar from "../../../public/default-avatar.png";
 import { useAuthStore } from "@/store/useAuthStore.js";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 
 import Image from "next/image";
 export default function profile() {
+  const UsernameInput = useRef();
   const [selectedImage, setSelectedImage] = useState();
+  const [isUpdateUserInfo, setIsUpdateUserInfo] = useState();
   const {
     user,
     checkAuth,
@@ -39,12 +41,19 @@ export default function profile() {
 
   const handleUpdateProfileName = async (e) => {
     const name = e.target.value;
-    if (name == user?.username) return;
+    if (name == user?.username) {
+      e.target.value = "";
+      return;
+    }
     if (!name) return;
     try {
+      setIsUpdateUserInfo(true);
       await updateUsername(name);
     } catch (error) {
       console.log(error);
+    } finally {
+      setIsUpdateUserInfo(false);
+      e.target.value = "";
     }
   };
 
@@ -69,7 +78,7 @@ export default function profile() {
                 accept="image/*"
                 className="w-[45px] cursor-pointer inline-flex z-[6] opacity-0 rounded-full  h-[45px] top-[63%]  border-[#050a19] border-[7px] right-[-1%] bg-[#0f225c] absolute text-[20px] font-bold "
               />
-              <div className=" absolute cursor-pointer z-[1] w-fit h-fit top-[63%] right-0 bg-blue-950 px-3 py-3 flex justify-center items-center rounded-full">
+              <div className=" absolute cursor-pointer  z-[1] w-fit h-fit top-[63%] right-0 bg-blue-950 px-3 py-3 flex justify-center items-center rounded-full">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="20"
@@ -95,7 +104,7 @@ export default function profile() {
               click the camera icon to update your photo
             </span>
             <div className="inputs w-[90%] flex flex-col gap-10 justify-center items-start my-10">
-              <div className="input-container flex flex-col w-full justify-center items-start">
+              <div className="input-container flex flex-col w-full justify-center items-start relative">
                 <label
                   htmlFor="username"
                   className=" flex items-end mb-2 justify-start gap-x-1"
@@ -121,12 +130,68 @@ export default function profile() {
                   Full Name
                 </label>
                 <input
+                  ref={UsernameInput}
+                  disabled={isUpdateUserInfo || isCheckingAuth}
                   id="username"
                   type="text"
                   onBlur={handleUpdateProfileName}
                   placeholder={user?.username}
                   className="bg-[#090c1c] px-3 rounded-lg py-3 w-full border border-gray-500"
                 />
+                <span
+                  className={
+                    isUpdateUserInfo ? "absolute top-[55%] right-2" : "hidden"
+                  }
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                  >
+                    <rect width="24" height="24" fill="none" />
+                    <g
+                      fill="none"
+                      stroke="#fff"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                    >
+                      <path
+                        stroke-dasharray="16"
+                        stroke-dashoffset="16"
+                        d="M12 3c4.97 0 9 4.03 9 9"
+                      >
+                        <animate
+                          fill="freeze"
+                          attributeName="stroke-dashoffset"
+                          dur="0.3s"
+                          values="16;0"
+                        />
+                        <animateTransform
+                          attributeName="transform"
+                          dur="1.5s"
+                          repeatCount="indefinite"
+                          type="rotate"
+                          values="0 12 12;360 12 12"
+                        />
+                      </path>
+                      <path
+                        stroke-dasharray="64"
+                        stroke-dashoffset="64"
+                        stroke-opacity="0.3"
+                        d="M12 3c4.97 0 9 4.03 9 9c0 4.97 -4.03 9 -9 9c-4.97 0 -9 -4.03 -9 -9c0 -4.97 4.03 -9 9 -9Z"
+                      >
+                        <animate
+                          fill="freeze"
+                          attributeName="stroke-dashoffset"
+                          dur="1.2s"
+                          values="64;0"
+                        />
+                      </path>
+                    </g>
+                  </svg>
+                </span>
               </div>
               <div className="input-container  flex flex-col w-full justify-center items-start">
                 <label

@@ -23,29 +23,33 @@ const metadata = {
 };
 
 export default function RootLayout({ children }) {
-  const { user, checkAuth, isCheckingAuth, logout, isLoggingOut , isUpdatingProfile } =
+  const { user, checkAuth, isCheckingAuth, logout, isUpdatingProfile, isLoggingOut } =
     useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
   const pagesWithSidebar = ["/profile", "/"];
-  const handelCheckAuth = async () => {
+  const unProtectedRoute = ["/forgot-password", "signup"];
+  const handleCheckAuth = async () => {
     const res = await checkAuth();
-    if (res?.status == 401) {
+    if (
+      res?.status == 401 &&
+      pathname !== "/login" &&
+      pathname !== "/forgot-password"
+    ) {
       router.push("/login");
     }
   };
 
   useEffect(() => {
-    handelCheckAuth();
-  }, [isLoggingOut]);
-
+    handleCheckAuth();
+  }, []);
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable}  flex max-h-[100vh] overflow-hidden`}
       >
         <Toaster posation="top-center" />
-        {isCheckingAuth && !user && (
+        {isCheckingAuth && !user && !unProtectedRoute.includes(pathname) || isLoggingOut && (
           <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-60 z-[999999]">
             <div className="w-[300px] flex items-center justify-center flex-col gap-4 h-[200px] top-[50%] left-[50%] translate-x-[-50%] translate-y-[-60%] rounded-lg bg-gray-900 absolute z-[99999]">
               <span className="loader"></span>
@@ -60,11 +64,11 @@ export default function RootLayout({ children }) {
               <h4 className="text-[18px] font-bold">update picture..</h4>
             </div>
           </div>
-        ) }
+        )}
         {pagesWithSidebar.includes(pathname) && (
           <div className="sidebar flex flex-row md:flex-col md:py-2 justify-between items-center md:h-[100vh] lg:w-[5%] md:w-[7%] w-[80%] left-[50%] translate-x-[-50%] md:translate-x-0 h-fit  md:rounded-none rounded-2xl shadow-3xl  md:bg-[#050a19] bg-[#0b1942c6] md:backdrop-blur-0 backdrop-blur-md md:relative fixed md:top-0 bottom-2 md:left-0 z-[9999]">
             <div className="logo w-full h-[60px]  items-center justify-center md:flex hidden">
-              logo
+              <h1 className="text-xl font-bold">Nexus</h1>
             </div>
             <ul className="flex flex-row  md:flex-col justify-evenly md:justify-center items-center py-3 mb-[-5px] h-fit w-full gap-5 ">
               <li className="order-3 md:order-1">
@@ -166,9 +170,9 @@ export default function RootLayout({ children }) {
               </li>
               <li className="order-1 md:order-4 ">
                 <button
-                  onClick={() => {
-                    logout();
-                    checkAuth();
+                  onClick={async () => {
+                   await new Promise(() => router.push("/login"))
+                      logout();
                   }}
                 >
                   <svg

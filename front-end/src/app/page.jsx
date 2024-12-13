@@ -314,7 +314,7 @@ export default function Home() {
           <div className="right-side flex-col justify-between pt-20 items-center lg:w-[50%] lg:flex hidden bg-[#050a19] h-full  ">
             <div className="content flex-col justify-start flex items-center">
               <h1 className="  font-bold text-[26px] mb-10">
-                Hallo, {user?.username} welcome to wep chat
+                Welcome, <span className=" border-b-2">{user?.username}</span>   to Nexus chat
               </h1>
               <div className="user-image-container relative">
                 <input
