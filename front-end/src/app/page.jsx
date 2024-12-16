@@ -19,9 +19,14 @@ export default function Home() {
   const router = useRouter();
   const [selectedImage, setSelectedImage] = useState();
   const handelCheckAuth = async () => {
-    const res = await checkAuth();
-    if (res?.status == 401) {
+
+    try{
+      await checkAuth();
+      
+    }
+    catch(error){
       router.push("/login");
+
     }
   };
 

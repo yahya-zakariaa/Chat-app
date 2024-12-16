@@ -1,27 +1,25 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import Link from "next/link";
-import * as yup from "yup";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
+import * as yup from "yup";
 export default function Login() {
   const { login, isLoggingIn } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (values) => {
-    try {
-      const res = await login(values.email, values.password);
-
-      if (res?.status === 200) {
-        router.push("/");
-      }
-    } catch (error) {}
+    const res = await login(values.email, values.password);
+    router.push("/");
   };
 
   const validationSchema = yup.object().shape({
-    email: yup.string().matches(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/, "Invalid email").required("Email is required"),
+    email: yup
+      .string()
+      .matches(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/, "Invalid email")
+      .required("Email is required"),
     password: yup.string().required("Password is required"),
   });
   const Formik = useFormik({

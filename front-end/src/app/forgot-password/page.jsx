@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useFormik } from "formik";
 import { toast } from "react-hot-toast";
@@ -10,8 +10,8 @@ export default function ForgotPassword() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
-  const [userId, setUserId] = useState("");
+  const [userId, setUserId] = useState(null);
+  const [userEmail, setUserEmail] = useState(null);
   const {
     sendVerificationCode,
     verifiedResetCode,
@@ -22,14 +22,12 @@ export default function ForgotPassword() {
   // handle send code
   const handleSubmit = async (values) => {
     setIsLoading(true);
-    console.log(values);
 
     try {
-      const res = await sendVerificationCode(values.email);
-
-      console.log(res);
+      await sendVerificationCode(values.email);
+      setUserEmail(values.email);
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.response.data.message);
     } finally {
       setIsLoading(false);
     }
@@ -45,9 +43,7 @@ export default function ForgotPassword() {
       email: "",
     },
     validationSchema: validationSchema,
-    onSubmit: (values) => {
-      handleSubmit(values), setUserEmail(values.email);
-    },
+    onSubmit: handleSubmit,
   });
 
   // handle verify code
@@ -55,7 +51,9 @@ export default function ForgotPassword() {
   const handleVerifyCodeSubmit = async ({ code }) => {
     setIsLoading(true);
     try {
-      const res = await verifiedResetCode(code.join(""), userEmail);
+      const res = await verifiedResetCode(code.join(""));
+      console.log(res);
+
       if (res?.status == 200) {
         setUserId(res?.data?.data.userId);
       }
@@ -176,7 +174,7 @@ export default function ForgotPassword() {
   return (
     <>
       <section className="bg-gray-50 dark:bg-gray-900 w-full ">
-        {!isResetCodeVerified && !isResetCodeSend ? ( // email form (send code) 
+        {!isResetCodeVerified && !isResetCodeSend ? ( // email form (send code)
           <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto min-h-screen lg:py-0">
             <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
               <h1 className="text-3xl font-bold leading-tight tracking-tight mt-5 text-center text-gray-900 md:text-2xl dark:text-white">
@@ -279,8 +277,14 @@ export default function ForgotPassword() {
                       })}
                   </div>
 
-                  <div className="resend-code">
-                    <p>Don't receive the code?</p> <button>send again</button>
+                  <div className="resend-code flex gap-2">
+                    <p>Don't receive the code?</p>{" "}
+                    <button
+                      onClick={() => handleSubmit(userEmail)}
+                      className="text-blue underline"
+                    >
+                      send again
+                    </button>
                   </div>
                   <div className="flex items-center justify-between flex-col gap-5">
                     <button

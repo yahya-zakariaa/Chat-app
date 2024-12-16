@@ -21,10 +21,7 @@ export const useAuthStore = create((set) => ({
       return res;
     } catch (error) {
       set({ user: null });
-      if (error.status == 500) {
-        toast.error("conection time out, try again ");
-      }
-      return error;
+      toast.error(error?.response.data.message);
     } finally {
       set({ isCheckingAuth: false });
     }
@@ -43,10 +40,10 @@ export const useAuthStore = create((set) => ({
       return res;
     } catch (error) {
       console.log(error);
-      if (error.response.data.message.startsWith("Email already exists")) {
+      if (error?.response.data.message.startsWith("Email already exists")) {
         return toast.error("Email already exists");
       }
-      toast.error("something went woreng, try again");
+      toast.error(error?.response.data.message);
     } finally {
       set({ isSigningUp: false });
     }
@@ -58,13 +55,11 @@ export const useAuthStore = create((set) => ({
         email,
         password,
       });
-      console.log(res.data);
-
       set({ user: res.data.data.user });
       toast.success("Logged in successfully");
       return res;
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error?.response.data.message);
     } finally {
       set({ isLoggingIn: false });
     }
@@ -75,49 +70,58 @@ export const useAuthStore = create((set) => ({
       await axiosInstance.post("auth/logout");
       toast.error("Logged out successfully");
     } catch (error) {
-      toast.error("something went woreng, try again");
+      toast.error(error?.response.data.message);
     } finally {
       set({ isLoggingOut: false });
+      set({ user: null });
     }
   },
-  sendVerificationCode :async (email) => {
-
+  sendVerificationCode: async (email) => {
     try {
       const res = await axiosInstance.post("auth/reset-code", { email });
       if (res.status === 200) {
         toast.success("code send via email");
         set({ isResetCodeSend: true });
       }
-      return res;
     } catch (error) {
-      console.log(error)
       set({ isResetCodeSend: false });
-      toast.error(error.data.message);
+      toast.error(error?.response.data.message);
     }
   },
-  verifiedResetCode:async(code,email)=>{
-try{
-  const res = await axiosInstance.post("auth/verified-code",{code,email});
-  if(res.status == 200 ){
-    set({ isResetCodeVerified: true });
-    toast.success("code verified successfully");
-  }
-}catch(error){
-  set({ isResetCodeVerified: false });
-  toast.error("Invalid code")
-}
-  },
-  resetPassword: async(userId,password)=>{
-    try{
-      const res = await axiosInstance.post("auth/reset-password",{userId,password})
-      if(res.status === 200){
-        console.log("password reseted")
+  verifiedResetCode: async (code) => {
+    try {
+      const res = await axiosInstance.post("auth/verified-code", {
+        code,
+      });
+      if (res.status == 200) {
+        set({ isResetCodeVerified: true });
+        set({ isResetCodeSend: false });
+        toast.success("code verified successfully");
+        return res;
       }
-    }catch(error){
-      console.log("error in reset password",error)
+    } catch (error) {
+      set({ isResetCodeVerified: false });
+      toast.error(error?.response.data.message);
     }
-  }
-  ,
+  },
+  resetPassword: async (userId, password) => {
+    console.log(password, userId);
+
+    try {
+      const res = await axiosInstance.post("auth/reset-password", {
+        userId,
+        password,
+      });
+      if (res.status === 200) {
+        toast.success("password reseted successfully");
+        set({ isResetCodeSend: false, isResetCodeVerified: false });
+        return res;
+      }
+    } catch (error) {
+      toast.error(error?.response.data.message);
+    }
+  },
+
   // user profile action
   updateUserPic: async (pic) => {
     set({ isUpdatingProfile: true });
@@ -126,9 +130,7 @@ try{
       set({ user: res.data.data.user });
       toast.success("Profile picture updated");
     } catch (error) {
-      if (error.status !== 401) {
-        return toast.error("something want woreng, try again");
-      }
+      toast.error(error?.response.data.message);
       return error;
     } finally {
       set({ isUpdatingProfile: false });
@@ -141,9 +143,7 @@ try{
       set({ user: res.data.data.user });
       toast.success("Username updated");
     } catch (error) {
-      if (error.status !== 401) {
-        return toast.error("something want worng, try again");
-      }
+      toast.error(error?.response.data.message);
       return error;
     } finally {
       set({ isUpdatingProfile: false });

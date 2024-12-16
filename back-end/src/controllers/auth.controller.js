@@ -4,20 +4,45 @@ import { generateJWT } from "../utils/utils.js";
 import cloudinary from "./../lib/cloudinary.js";
 import nodemailer from "nodemailer";
 import ResetCode from "../models/resetCode.modal.js";
+import mongoose from "mongoose";
 
-// auth controllers
+let failedLoginAttempts = {};
+const MAX_ATTEMPTS = 5;
+const LOCK_TIME = 5 * 60 * 1000;
+
+const incrementFailedAttempts = (email) => {
+  if (!failedLoginAttempts[email]) {
+    failedLoginAttempts[email] = { count: 0, time: Date.now() };
+  }
+  failedLoginAttempts[email].count += 1;
+  failedLoginAttempts[email].time = Date.now();
+};
+
+const resetFailedAttempts = (email) => {
+  failedLoginAttempts[email] = null;
+};
+
 const register = async (req, res) => {
   try {
     const { username, email, password } = req.body;
+    if (!username || !email || !password) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Please fill in all required fields.",
+      });
+    }
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+
     const newUser = await User.create({
       username,
       email,
       password: hashedPassword,
     });
+
     generateJWT(newUser._id, res);
-    await newUser.save();
+
     res.status(201).json({
       status: "success",
       data: {
@@ -28,48 +53,103 @@ const register = async (req, res) => {
           createdAt: newUser.createdAt,
         },
       },
-      message: "Account has been created ",
+      message: "Account has been created successfully.",
     });
   } catch (error) {
-    if (error.message.startsWith("E11000")) {
-      res.status(400).json({
+    if (error instanceof mongoose.Error.ValidationError) {
+      return res.status(400).json({
         status: "fail",
-        message: "Email already exists",
+        message: error.message,
       });
     }
-    res.status(500).json({
+
+    if (
+      error.name === "MongoNetworkError" ||
+      error.name === "MongoTimeoutError"
+    ) {
+      return res.status(500).json({
+        status: "error",
+        message: "Database connection error. Please try again later.",
+      });
+    }
+
+    if (error.name === "MongoError" && error.code === 11000) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Email already exists. Please use a different one.",
+      });
+    }
+
+    return res.status(500).json({
       status: "error",
-      message: error.massage || "something went wrong.",
+      message: error.message || "Something went wrong. Please try again later.",
     });
   }
 };
 
 const login = async (req, res) => {
-  if (!req.body.email || !req.body.password) {
-    res.status(400).json({
-      status: "fail",
-      message: "Please provide email and password",
-    });
-    return;
-  }
   const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({
+      status: "fail",
+      message: "Please provide both email and password.",
+    });
+  }
+
+  if (
+    failedLoginAttempts[email] &&
+    failedLoginAttempts[email].count >= MAX_ATTEMPTS
+  ) {
+    const timeLeft = LOCK_TIME - (Date.now() - failedLoginAttempts[email].time);
+    if (timeLeft > 0) {
+      const minutesLeft = Math.floor(timeLeft / 60000);
+      const secondsLeft = Math.floor((timeLeft % 60000) / 1000);
+
+      let message = `Too many failed attempts. Please try again in `;
+      if (minutesLeft > 0) {
+        message += `${minutesLeft} minute${minutesLeft > 1 ? "s" : ""}`;
+        if (secondsLeft > 0) {
+          message += ` and ${secondsLeft} second${secondsLeft > 1 ? "s" : ""}`;
+        }
+      } else {
+        message += `${secondsLeft} second${secondsLeft > 1 ? "s" : ""}`;
+      }
+
+      return res.status(429).json({
+        status: "fail",
+        message: message,
+      });
+    } else {
+      resetFailedAttempts(email);
+    }
+  }
+
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      return res
-        .status(400)
-        .json({ status: "fail", message: "Invalid email or password" });
+      incrementFailedAttempts(email);
+      return res.status(400).json({
+        status: "fail",
+        message: "Invalid email or password.",
+      });
     }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res
-        .status(400)
-        .json({ status: "fail", message: "Invalid email or password" });
+      incrementFailedAttempts(email);
+      return res.status(400).json({
+        status: "fail",
+        message: "Invalid email or password.",
+      });
     }
+
+    resetFailedAttempts(email);
+
     const token = generateJWT(user._id, res);
     res.status(200).json({
       status: "success",
-      token: token,
+      token,
       data: {
         user: {
           id: user._id,
@@ -82,13 +162,33 @@ const login = async (req, res) => {
     });
   } catch (error) {
     if (error.name === "JsonWebTokenError") {
-      res.status(401).json({ status: "error", message: "Invalid token" });
+      return res.status(401).json({
+        status: "fail",
+        message: "Invalid token.",
+      });
     }
 
-    if (error.name.contains("opration")) {
+    if (
+      error.name === "MongoNetworkError" ||
+      error.name === "MongoTimeoutError"
+    ) {
+      return res.status(500).json({
+        status: "error",
+        message: "Database connection error. Please try again later.",
+      });
     }
 
-    res.status(500).json({ status: "error", message: error.message });
+    if (error instanceof mongoose.Error.ValidationError) {
+      return res.status(400).json({
+        status: "fail",
+        message: error.message,
+      });
+    }
+
+    return res.status(500).json({
+      status: "error",
+      message: error.message || "Something went wrong. Please try again later.",
+    });
   }
 };
 
@@ -450,22 +550,32 @@ text-decoration: none
       res.status(200).json({ status: "success", message: "Email sent" });
     });
   } catch (error) {
-    console.log(error);
-
-    res.status(500).json({
+    if (error.code === "EAUTH") {
+      return res.status(400).json({
+        status: "error",
+        message: "Unable to send the email, check your email settings.",
+      });
+    }
+    if (error.code === "ETIMEDOUT") {
+      return res.status(400).json({
+        status: "error",
+        message: "Email sending timed out, please try again later.",
+      });
+    }
+    return res.status(500).json({
       status: "error",
-      message: error.massage || "something went wrong.",
+      message: error.message || "something went wrong.",
     });
   }
 };
 
 const verifyResetCode = async (req, res) => {
-  const { code, email } = req.body;
+  const { code } = req.body;
 
-  if (!code || !email) {
+  if (!code) {
     return res.status(400).json({
       status: "fail",
-      message: "Please provide code and email",
+      message: "Please provide code ",
     });
   }
 
@@ -478,38 +588,37 @@ const verifyResetCode = async (req, res) => {
         message: "Invalid code",
       });
     }
+
     if (resetCodeEntry.expireAt < Date.now()) {
       return res.status(400).json({
         status: "failed",
-        message: "Code expired",
+        message: "Expired code",
       });
     }
 
- 
     res.status(200).json({
       status: "success",
       message: "Code verified",
-      data:{
-        userId: resetCodeEntry.userId
-      }
+      data: {
+        userId: resetCodeEntry.userId,
+      },
     });
   } catch (error) {
-    console.log(error);
-
     res.status(500).json({
       status: "error",
-      message: error.massage || "something went wrong.",
+      message: error.message || "something went wrong.",
     });
   }
 };
 
 const resetPassword = async (req, res) => {
   const { userId, password } = req.body;
+  console.log(userId, password);
 
   if (!password || !userId) {
     return res.status(400).json({
       status: "fail",
-      message: "Please provide password",
+      message: "client side error, please try again",
     });
   }
   try {
@@ -532,7 +641,7 @@ const resetPassword = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       status: "error",
-      message: error.massage || "something went wrong.",
+      message: error.message || "something went wrong.",
     });
   }
 };
@@ -554,7 +663,7 @@ const updateProfileAvatar = async (req, res) => {
     if (!uploadRes) {
       res.status(500).json({
         status: "fail",
-        message: error.massage || "something went wrong.",
+        message: error.message || "something went wrong.",
       });
     }
     const userUpdated = await User.findByIdAndUpdate(
@@ -575,7 +684,7 @@ const updateProfileAvatar = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       status: "error",
-      message: error.massage || "something went wrong.",
+      message: error.message || "something went wrong.",
     });
   }
 };
@@ -609,7 +718,7 @@ const updateProfileName = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       status: "error",
-      message: error.massage || "something went wrong.",
+      message: error.message || "something went wrong.",
     });
   }
 };

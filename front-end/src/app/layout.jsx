@@ -30,13 +30,17 @@ export default function RootLayout({ children }) {
   const pagesWithSidebar = ["/profile", "/"];
   const unProtectedRoute = ["/forgot-password", "signup"];
   const handleCheckAuth = async () => {
-    const res = await checkAuth();
-    if (
-      res?.status == 401 &&
-      pathname !== "/login" &&
-      pathname !== "/forgot-password"
-    ) {
-      router.push("/login");
+    try{
+      await checkAuth();
+    }
+    catch(error){
+      if (
+        pathname !== "/login" &&
+        pathname !== "/signup"&&
+        pathname !== "/forgot-password"
+      ) {
+        router.push("/login");
+      }
     }
   };
 
