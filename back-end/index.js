@@ -30,7 +30,7 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
-    origin: "https://bluechat-api.vercel.app" || "http://localhost:3001",
+    origin: "https://bluechat-api-1.vercel.app" || "http://localhost:3001",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
