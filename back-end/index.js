@@ -21,6 +21,7 @@ app.use(
       if (
         [
           "https://chat-app-api.vercel.app",
+          "https://chat-app-6ptwpvepq-yz3004629-gmailcoms-projects.vercel.app",
           "http://localhost:3001",
           "https://chat-app-api-lemon.vercel.app",
         ].includes(origin) ||
