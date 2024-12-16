@@ -1,15 +1,26 @@
 {
-    "version": 2,
-    "builds": [
+  "version": 2,
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
         {
-            "src": "*.js",
-            "use": "@vercel/node"
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' https://vercel.live; style-src 'self' 'unsafe-inline'; connect-src 'self' wss://vercel.live;"
         }
-    ],
-    "routes": [
-        {
-            "src": "/(.*)",
-            "dest": "index.js"
-        }
-    ]
+      ]
+    }
+  ],
+  "builds": [
+    {
+      "src": "*.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "index.js"
+    }
+  ]
 }
