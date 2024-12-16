@@ -10,19 +10,6 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "https://vercel.live"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", "data:"],
-        connectSrc: ["'self'", "wss://vercel.live"],
-      },
-    },
-  })
-);
 
 // global middlewares
 app.use(express.json());
