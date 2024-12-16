@@ -18,7 +18,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (["https://chat-app-api.vercel.app", "http://localhost:3001"].includes(origin) || !origin) {
+      if (
+        [
+          "https://chat-app-api.vercel.app",
+          "http://localhost:3001",
+          "https://chat-app-api-lemon.vercel.app",
+        ].includes(origin) ||
+        !origin
+      ) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
