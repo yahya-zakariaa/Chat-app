@@ -3,9 +3,9 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import { useAuthStore } from "@/store/useAuthStore";
-import { useEffect } from "react";
+import { useEffect,useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-
+import Link from "next/link";
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -23,20 +23,26 @@ const metadata = {
 };
 
 export default function RootLayout({ children }) {
-  const { user, checkAuth, isCheckingAuth, logout, isUpdatingProfile, isLoggingOut } =
-    useAuthStore();
+  const {
+    user,
+    checkAuth,
+    isCheckingAuth,
+    logout,
+    isUpdatingProfile,
+    isLoggingOut,
+  } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
   const pagesWithSidebar = ["/profile", "/"];
   const unProtectedRoute = ["/forgot-password", "signup"];
+  const [toggleSettings, setToggleSettings] = useState(false);
   const handleCheckAuth = async () => {
-    try{
+    try {
       await checkAuth();
-    }
-    catch(error){
+    } catch (error) {
       if (
         pathname !== "/login" &&
-        pathname !== "/signup"&&
+        pathname !== "/signup" &&
         pathname !== "/forgot-password"
       ) {
         router.push("/login");
@@ -53,14 +59,15 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable}  flex max-h-[100vh] overflow-hidden`}
       >
         <Toaster posation="top-center" />
-        {isCheckingAuth && !user && !unProtectedRoute.includes(pathname) || isLoggingOut && (
-          <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-60 z-[999999]">
-            <div className="w-[300px] flex items-center justify-center flex-col gap-4 h-[200px] top-[50%] left-[50%] translate-x-[-50%] translate-y-[-60%] rounded-lg bg-gray-900 absolute z-[99999]">
-              <span className="loader"></span>
-              <h4 className="text-[18px] font-bold">Loading..</h4>
+        {(isCheckingAuth && !user && !unProtectedRoute.includes(pathname)) ||
+          (isLoggingOut && (
+            <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-60 z-[999999]">
+              <div className="w-[300px] flex items-center justify-center flex-col gap-4 h-[200px] top-[50%] left-[50%] translate-x-[-50%] translate-y-[-60%] rounded-lg bg-gray-900 absolute z-[99999]">
+                <span className="loader"></span>
+                <h4 className="text-[18px] font-bold">Loading..</h4>
+              </div>
             </div>
-          </div>
-        )}
+          ))}
         {isUpdatingProfile && (
           <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-60 z-[999999]">
             <div className="w-[300px] flex items-center justify-center flex-col gap-4 h-[200px] top-[50%] left-[50%] translate-x-[-50%] translate-y-[-60%] rounded-lg bg-gray-900 absolute z-[99999]">
@@ -70,13 +77,13 @@ export default function RootLayout({ children }) {
           </div>
         )}
         {pagesWithSidebar.includes(pathname) && (
-          <div className="sidebar flex flex-row md:flex-col md:py-2 justify-between items-center md:h-[100vh] lg:w-[5%] md:w-[7%] w-[80%] left-[50%] translate-x-[-50%] md:translate-x-0 h-fit  md:rounded-none rounded-2xl shadow-3xl  md:bg-[#050a19] bg-[#0b1942c6] md:backdrop-blur-0 backdrop-blur-md md:relative fixed md:top-0 bottom-2 md:left-0 z-[9999]">
+          <div className="sidebar  flex flex-row md:flex-col md:py-2 justify-between items-center md:h-[100vh] lg:w-[5%] md:w-[7%] w-[90%] left-[50%] translate-x-[-50%] md:translate-x-0 h-fit  md:rounded-none rounded-2xl shadow-3xl  md:bg-[#0e1428] bg-[#0b1942c6] md:backdrop-blur-0 backdrop-blur-md md:relative fixed md:top-0 bottom-2 md:left-0 z-[9999]">
             <div className="logo w-full h-[60px]  items-center justify-center md:flex hidden">
               <h1 className="text-xl font-bold">Nexus</h1>
             </div>
-            <ul className="flex flex-row  md:flex-col justify-evenly md:justify-center items-center py-3 mb-[-5px] h-fit w-full gap-5 ">
-              <li className="order-3 md:order-1">
-                <button className="">
+            <ul className="flex flex-row   md:flex-col justify-evenly md:justify-center items-center pb-3 pt-2 mb-[-5px] h-fit w-full gap-4 ">
+              <li className="order-4 md:order-1 hover:bg-white px-2 md:rounded-md rounded-full hover:bg-opacity-10 min-h-[50px] md:min-h-[40px] md:w-[70%] w-[50px] justify-center flex items-center">
+                <Link href={"/"} className="">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="36"
@@ -88,9 +95,9 @@ export default function RootLayout({ children }) {
                       d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1"
                     />
                   </svg>
-                </button>
+                </Link>
               </li>
-              <li className="order-4 md:order-2">
+              <li className="order-3 md:order-2 hover:bg-white px-2 md:rounded-md rounded-full hover:bg-opacity-10 min-h-[50px] md:min-h-[40px] md:w-[70%] w-[50px] justify-center flex items-center">
                 <button>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -142,8 +149,8 @@ export default function RootLayout({ children }) {
                   </svg>
                 </button>
               </li>
-              <li className="md:order-3 order-5">
-                <button>
+              <li className={`md:order-3 order-2 relative ${!toggleSettings?"bg-transparent": "bg-white bg-opacity-10"} hover:bg-white px-2 md:rounded-md rounded-full hover:bg-opacity-10 min-h-[50px] md:min-h-[40px] md:w-[70%] w-[50px] justify-center flex items-center`}>
+                <button onClick={()=>setToggleSettings(!toggleSettings)} className="w-full h-full flex justify-center items-center">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="32"
@@ -156,33 +163,65 @@ export default function RootLayout({ children }) {
                     />
                   </svg>
                 </button>
+                <div className={`arrow ${!toggleSettings?"hidden": ""}  border-transparent border-r-[#212638] border-[18px] w-[20px] h-[20px] absolute md:left-[75%] bottom-[50%] translate-y-[50%]`}></div>
+                <ul className={`bg-[#212638] ${!toggleSettings?"hidden": "flex"}    gap-4 rounded-lg ps-2 pe-7 pb-7 pt-3 h-[300px] w-[250px]   flex-col left-[130%] bottom-[-170%]  absolute`}>
+                  <li>
+                    <Link href="#" className={"flex items-center  gap-2 "}>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="23"
+                        height="22"
+                        viewBox="0 0 512 512"
+                      >
+                        <rect width="23" height="23" fill="none" />
+                        <path
+                          fill="none"
+                          stroke="#fff"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="50"
+                          d="M463.1 112.37C373.68 96.33 336.71 84.45 256 48c-80.71 36.45-117.68 48.33-207.1 64.37C32.7 369.13 240.58 457.79 256 464c15.42-6.21 223.3-94.87 207.1-351.63"
+                        />
+                      </svg>
+                      <p className="text-[18px] font-medium mb-[-1px]">
+                        Security
+                      </p>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="#" className={"flex items-center  gap-2 "}>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="23"
+                        height="23"
+                        viewBox="0 0 24 24"
+                      >
+                        <rect width="23" height="23" fill="none" />
+                        <path
+                          fill="#fff"
+                          stroke="#fff"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="1.2"
+                          d="M12.028 17.23q.332 0 .56-.228t.228-.56t-.23-.56q-.228-.228-.56-.228t-.56.229t-.227.56q0 .332.228.56q.23.228.561.228m-.517-3.312h.966q.038-.652.245-1.06q.207-.407.851-1.04q.67-.669.996-1.199t.327-1.226q0-1.182-.83-1.884q-.831-.702-1.966-.702q-1.079 0-1.832.586q-.753.587-1.103 1.348l.92.381q.24-.546.687-.965q.447-.42 1.29-.42q.972 0 1.42.534q.449.534.449 1.174q0 .52-.281.928q-.28.409-.73.822q-.87.802-1.14 1.36t-.269 1.363M12.003 21q-1.866 0-3.51-.708q-1.643-.709-2.859-1.924t-1.925-2.856T3 12.003t.709-3.51Q4.417 6.85 5.63 5.634t2.857-1.925T11.997 3t3.51.709q1.643.708 2.859 1.922t1.925 2.857t.709 3.509t-.708 3.51t-1.924 2.859t-2.856 1.925t-3.509.709M12 20q3.35 0 5.675-2.325T20 12t-2.325-5.675T12 4T6.325 6.325T4 12t2.325 5.675T12 20m0-8"
+                        />
+                      </svg>
+                      <p className="text-[18px] font-medium mb-[-1px]">Help</p>
+                    </Link>
+                  </li>
+                </ul>
               </li>
-              <li className="order-2 md:order-4 ">
-                <button>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="34"
-                    height="34"
-                    viewBox="0 0 256 256"
-                  >
-                    <path
-                      fill="#fff"
-                      d="M84 120a44 44 0 1 1 44 44a44 44 0 0 1-44-44m126.16 57.18a8.21 8.21 0 0 0-10.86 2.41a87 87 0 0 1-5.52 6.85A79.8 79.8 0 0 0 172 165.1a4 4 0 0 0-4.84.32a59.8 59.8 0 0 1-78.26 0a4 4 0 0 0-4.9-.32a79.7 79.7 0 0 0-21.79 21.31A87.66 87.66 0 0 1 40.37 136h15.4a8.2 8.2 0 0 0 6.69-3.28a8 8 0 0 0-.8-10.38l-24-24a8 8 0 0 0-11.32 0l-24 24a8 8 0 0 0-.8 10.38A8.2 8.2 0 0 0 8.23 136H24.3a104 104 0 0 0 188.18 52.67a8 8 0 0 0-2.32-11.49m45.23-52.24A8 8 0 0 0 248 120h-16.3A104 104 0 0 0 43.52 67.33a8 8 0 0 0 13 9.34A88 88 0 0 1 215.63 120H200a8 8 0 0 0-5.66 13.66l24 24a8 8 0 0 0 11.32 0l24-24a8 8 0 0 0 1.73-8.72"
-                    />
-                  </svg>
-                </button>
-              </li>
-              <li className="order-1 md:order-4 ">
+              <li className="order-1 md:order-4  px-2 md:rounded-md rounded-full hover:bg-opacity-10 min-h-[50px] md:min-h-[40px] md:w-[70%] w-[50px] justify-center flex items-center ">
                 <button
                   onClick={async () => {
-                   await new Promise(() => router.push("/login"))
-                      logout();
+                    await new Promise(() => router.push("/login"));
+                    logout();
                   }}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    width="356"
-                    height="36"
+                    width="35"
+                    height="35"
                     viewBox="0 0 24 24"
                   >
                     <path

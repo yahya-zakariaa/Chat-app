@@ -53,8 +53,8 @@ export default function Home() {
         
 
         <div className="main-layout   w-[100%] flex justify-between   h-[100vh] ">
-          <div className="chats-section  lg:w-[50%] w-full h-full  bg-gray-900 flex flex-col ">
-            <div className="chat-header h-[12%]  py-3 flex justify-between items-center md:px-6 px-4 border-b border-1 border-[#ffffff69]">
+          <div className="chats-section  lg:w-[50%] w-full h-full  bg-[#050a19] border-r  border-gray-800 flex flex-col ">
+            <div className="chat-header h-[12%]  py-3 flex justify-between items-center md:px-6 px-4 ">
               <div className="title mb-0.5 text-[30px] text-white   font-bold">
                 Chats
               </div>
@@ -66,7 +66,7 @@ export default function Home() {
                 />
               </div>
             </div>
-            <div className="chats h-[50%] py-2 min-h-[88%]  overflow-auto scroll  gap-1 w-full flex flex-col items-center justify-start  px-1">
+            <div className="chats  h-[50%] py-2 min-h-[88%]  overflow-auto scroll  gap-1 w-full flex flex-col items-center justify-start  px-1">
               <div className="chat    rounded-lg w-full min-h-[80px] h-[80px] flex relative  justify-start items-center   px-2">
                 <div className="massage-count absolute left-[5px] bottom-[5px] border-[#dbdbdbd2]  bg-[#0f225c] w-[25px] h-[25px] rounded-full flex items-center justify-center text-[12px]">
                   5

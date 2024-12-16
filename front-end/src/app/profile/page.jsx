@@ -62,9 +62,9 @@ export default function profile() {
   }, [isLoggingOut]);
 
   return (
-    <section className="bg-gray-50 dark:bg-gray-950 w-full ">
+    <section className="bg-gray-50 dark:bg-gray-950 w-full overflow-auto m">
       <div className="flex flex-col items-center justify-start   px-6 py-8 mx-auto min-h-screen lg:py-0">
-        <div className="w-full bg-white rounded-lg mt-[100px] shadow dark:border  sm:max-w-md xl:p-0 dark:bg-gray-900 dark:border-gray-700 min-w-[600px]">
+        <div className="w-full bg-white rounded-lg md:mt-[100px] shadow dark:border  sm:max-w-md xl:p-0 dark:bg-gray-900 dark:border-gray-700 md:min-w-[600px]">
           <h1 className="text-2xl mb-10 font-bold leading-tight tracking-wide mt-5 text-center text-gray-900 md:text-3xl dark:text-white ">
             Profile
           </h1>
@@ -153,13 +153,13 @@ export default function profile() {
                     <g
                       fill="none"
                       stroke="#fff"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
                     >
                       <path
-                        stroke-dasharray="16"
-                        stroke-dashoffset="16"
+                        strokeDasharray="16"
+                        strokeDashoffset="16"
                         d="M12 3c4.97 0 9 4.03 9 9"
                       >
                         <animate
@@ -177,9 +177,9 @@ export default function profile() {
                         />
                       </path>
                       <path
-                        stroke-dasharray="64"
-                        stroke-dashoffset="64"
-                        stroke-opacity="0.3"
+                        strokeDasharray="64"
+                        strokeDashoffset="64"
+                        strokeOpacity="0.3"
                         d="M12 3c4.97 0 9 4.03 9 9c0 4.97 -4.03 9 -9 9c-4.97 0 -9 -4.03 -9 -9c0 -4.97 4.03 -9 9 -9Z"
                       >
                         <animate
