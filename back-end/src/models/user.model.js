@@ -20,11 +20,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+
     friends: [
       {
         id: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        username: { type: String },
-        avatar: { type: String },
+        friendshipDate: { type: Date, default: Date.now },
       },
     ],
   },

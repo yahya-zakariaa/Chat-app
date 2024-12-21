@@ -1,7 +1,6 @@
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import { generateJWT } from "../utils/utils.js";
-import cloudinary from "./../lib/cloudinary.js";
 import nodemailer from "nodemailer";
 import ResetCode from "../models/resetCode.modal.js";
 import mongoose from "mongoose";
@@ -646,90 +645,12 @@ const resetPassword = async (req, res) => {
   }
 };
 
-// user profile management controllers
-const updateProfileAvatar = async (req, res) => {
-  const { avatar } = req.body;
-  const { _id } = req.user;
-
-  if (!avatar) {
-    res.status(400).json({
-      status: "fail",
-      message: "Please provide avatar picture",
-    });
-  }
-
-  try {
-    const uploadRes = await cloudinary.uploader.upload(avatar);
-    if (!uploadRes) {
-      res.status(500).json({
-        status: "fail",
-        message: error.message || "something went wrong.",
-      });
-    }
-    const userUpdated = await User.findByIdAndUpdate(
-      _id,
-      { avatar: uploadRes.secure_url },
-      { new: true }
-    ).select("-password");
-    if (!userUpdated) {
-      return res
-        .status(401)
-        .json({ status: "fail", message: "User not found" });
-    }
-    res.status(200).json({
-      status: "success",
-      data: { user: userUpdated },
-      message: "profile picutre updated successfully",
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: "error",
-      message: error.message || "something went wrong.",
-    });
-  }
-};
-
-const updateProfileName = async (req, res) => {
-  const { username } = req.body;
-  const { _id } = req.user;
-  if (!username) {
-    return res.status(400).json({
-      status: "fail",
-      message: "Please provide username",
-    });
-  }
-
-  try {
-    const userUpdated = await User.findByIdAndUpdate(
-      _id,
-      { username },
-      { new: true }
-    ).select("-password");
-    if (!userUpdated) {
-      return res
-        .status(401)
-        .json({ status: "fail", message: "User not found" });
-    }
-    res.status(200).json({
-      status: "success",
-      data: { user: userUpdated },
-      message: "profile name updated successfully",
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: "error",
-      message: error.message || "something went wrong.",
-    });
-  }
-};
 
 export {
   register,
   login,
   logout,
-  updateProfileAvatar,
   checkAuth,
-  updateProfileName,
   sendVerificationCode,
   verifyResetCode,
   resetPassword,

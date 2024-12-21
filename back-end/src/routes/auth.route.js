@@ -4,8 +4,6 @@ import {
   login,
   logout,
   checkAuth,
-  updateProfileName,
-  updateProfileAvatar,
   sendVerificationCode,
   verifyResetCode,
   resetPassword,
@@ -26,8 +24,5 @@ router.post("/reset-code", sendVerificationCode);
 router.post("/verified-code", verifyResetCode);
 router.post("/reset-password", resetPassword);
 
-// user profile management routes
-router.put("/update-profile", protectedRoute, updateProfileAvatar);
-router.put("/update-username", protectedRoute, updateProfileName);
 
 export default router;

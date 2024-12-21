@@ -126,7 +126,7 @@ export const useAuthStore = create((set) => ({
   updateUserPic: async (pic) => {
     set({ isUpdatingProfile: true });
     try {
-      const res = await axiosInstance.put("auth/update-profile", pic);
+      const res = await axiosInstance.put("user/update-profile", pic);
       set({ user: res.data.data.user });
       toast.success("Profile picture updated");
     } catch (error) {
@@ -139,7 +139,7 @@ export const useAuthStore = create((set) => ({
   updateUsername: async (username) => {
     set({ isUpdatingProfile: true });
     try {
-      const res = await axiosInstance.put("auth/update-username", { username });
+      const res = await axiosInstance.put("user/update-username", { username });
       set({ user: res.data.data.user });
       toast.success("Username updated");
     } catch (error) {
