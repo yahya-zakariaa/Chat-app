@@ -11,7 +11,7 @@ export default function Login() {
   const router = useRouter();
 
   const handleSubmit = async (values) => {
-    const res = await login(values.email, values.password);
+    const res = await login(values?.email, values?.password);
     router.push("/");
   };
 

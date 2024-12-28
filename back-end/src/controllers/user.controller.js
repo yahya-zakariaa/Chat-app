@@ -11,18 +11,21 @@ const getUserFrindes = async (req, res) => {
     });
   }
   try {
-    const user = await User.findById(userId);
-    if (!user) {
+    const userFriends = await User.findById(userId)
+    .populate("friends.id").exec()
+    console.log(userFriends.friends);
+
+    if (!userFriends) {
       return res.status(400).json({
         status: "fail",
-        message: "something went wrong - Please Login again",
+        message: "something went wrong - Please try again",
       });
     }
-    const userFriends = user.friends;
     return res.status(200).json({
       status: "success",
       data: {
-        friends: userFriends.length > 0 ? userFriends : "No friends found",
+        friends: userFriends || [],
+        total: userFriends.length || 0,
       },
     });
   } catch (error) {
@@ -54,7 +57,10 @@ const getFriendRequests = async (req, res) => {
     }
     return res.status(200).json({
       status: "success",
-      data: { requests: friendRequests },
+      data: {
+        requests: friendRequests,
+        total: friendRequests.length,
+      },
     });
   } catch (error) {
     res.status(500).json({
@@ -370,13 +376,13 @@ const discoverNewFriends = async (req, res) => {
   try {
     const users = await User.find({
       _id: { $ne: _id, $nin: req.user.friends },
-    }).select("-password", "-__v", "email", "friends");
+    }).select(["-password", "-__v", "-email", "-friends"]);
     if (!users) {
       return res.status(204).json({ status: "success", message: " Not found" });
     }
     res.status(200).json({
       status: "success",
-      data: { users },
+      data: { result: users },
     });
   } catch (error) {
     return res.status(500).json({
@@ -395,5 +401,5 @@ export {
   rejectFriendRequest,
   removeFriend,
   searchNewFriends,
-  discoverNewFriends
+  discoverNewFriends,
 };

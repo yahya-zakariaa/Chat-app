@@ -16,11 +16,11 @@ const router = express.Router();
 
 // user friendship
 router.get("/discover-new-friends", protectedRoute, discoverNewFriends);
-router.get("/search-new-friends", protectedRoute, searchNewFriends);
-router.post("/send-friend-request", protectedRoute, sendFriendRequest);
-router.post("/accept-friend-request", protectedRoute, acceptFriendRequest);
 router.get("/get-friend-requests", protectedRoute, getFriendRequests);
 router.get("/get-friends", protectedRoute, getUserFrindes);
+router.post("/search-new-friends", protectedRoute, searchNewFriends);
+router.post("/send-friend-request", protectedRoute, sendFriendRequest);
+router.post("/accept-friend-request", protectedRoute, acceptFriendRequest);
 router.post("/reject-friend-request", protectedRoute, rejectFriendRequest);
 router.post("/remove-friend", protectedRoute, removeFriend);
 

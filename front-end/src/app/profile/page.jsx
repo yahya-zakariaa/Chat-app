@@ -62,7 +62,7 @@ export default function profile() {
   }, [isLoggingOut]);
 
   return (
-    <section className="bg-gray-50 dark:bg-gray-950 w-full overflow-auto m">
+    <section className="bg-gray-50 dark:bg-gray-950 w-full overflow-auto md:w-[94.5%]  relative h-[88%] md:h-full">
       <div className="flex flex-col items-center justify-start   px-6 py-8 mx-auto min-h-screen lg:py-0">
         <div className="w-full bg-white rounded-lg md:mt-[100px] shadow dark:border  sm:max-w-md xl:p-0 dark:bg-gray-900 dark:border-gray-700 md:min-w-[600px]">
           <h1 className="text-2xl mb-10 font-bold leading-tight tracking-wide mt-5 text-center text-gray-900 md:text-3xl dark:text-white ">
