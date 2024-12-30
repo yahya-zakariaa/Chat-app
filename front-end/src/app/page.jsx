@@ -8,14 +8,17 @@ import DefaultRightSideContent from "@/components/DefaultRightSideContent";
 import DescoverFriends from "@/components/DescoverFriends";
 import useWindowWidth from "@/hooks/useWindowWidth";
 export default function Home() {
-  const { getFriends, friends, descoverUsers, descoverResult } = useUserStore();
+  const { getFriends, friends, descoverResult, getFriendRequest } =
+    useUserStore();
   const { user, checkAuth } = useAuthStore();
   const { activeComponent, setActiveComponent } = useToggleComponents();
   const windowWidth = useWindowWidth();
   const router = useRouter();
   const components = {
     default: <DefaultRightSideContent />,
-    DescoverFriends: <DescoverFriends />,
+    descoverFriends: <DescoverFriends />,
+    notifications: <div>Notifications</div>,
+    
   };
   const [currentComponent, setCurrentComponent] = useState(
     components[activeComponent]
@@ -39,6 +42,14 @@ export default function Home() {
     }
   };
 
+  const handleGetFriendRequests = async () => {
+    try {
+      const res = await getFriendRequest();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
     handleCheckAuth();
   }, [user?._id]);
@@ -49,17 +60,14 @@ export default function Home() {
 
   useEffect(() => {
     handelGetFriends();
-    descoverUsers().then(() => {
-      console.log(descoverResult);
-    });
-  }, [friends?.length, descoverResult?.length]);
+  }, [friends?.length]);
 
   return (
     <>
       <div className="md:w-[94.5%] w-full flex relative h-[88%] md:h-full">
         <div className="main-page-layout   w-[100%] flex justify-between items-start md:items-center  h-full  ">
-          <div className="chats-section  lg:w-[30%] relative w-full h-full rounded-xl overflow-hidden  bg-[#050a19] flex flex-col ">
-            <div className="chat-header h-[12%] sticky top-0 left-0 z-[20]   py-3 bg-[#050a19] w-full  flex justify-between items-center md:px-2 px-3 ">
+          <div className="chats-section  lg:w-[30%] relative w-full h-full rounded-xl overflow-hidden  bg-[#0d0d0d] flex flex-col ">
+            <div className="chat-header h-[12%] sticky top-0 left-0 z-[20]   py-3 bg-[#0d0d0d] w-full  flex justify-between items-center md:px-2 px-3 ">
               <div className="title mb-0.5 text-[24px] text-white   font-bold">
                 Chats
               </div>
@@ -67,7 +75,7 @@ export default function Home() {
                 <input
                   type="text"
                   placeholder="Search with name"
-                  className="placeholder:text-[#333333] placeholder:text-[16px] text-[#333333] text-[16px] bg-[#f0f0f0e4] rounded-full py-1 ps-3"
+                  className="placeholder:text-[#9f9f9f] placeholder:text-[16px] text-[#ddd] text-[16px] bg-[#2f2f2f] rounded-full py-1 ps-3"
                 />
                 <button className="search w-fit cursor-pointer   ">
                   <svg
@@ -112,8 +120,8 @@ export default function Home() {
             </div>
           </div>
           {windowWidth >= 1024 && (
-            <div className="dynamic-side-in-desktop overflow-auto rounded-xl lg:w-[69.5%] lg:block hidden bg-[#050a19] h-full py-2  ">
-              {currentComponent || <DefaultRightSideContent />}
+            <div className="dynamic-side-in-desktop overflow-auto rounded-xl lg:w-[69.5%] lg:block hidden bg-[#0d0d0d] h-full   ">
+              {currentComponent}
             </div>
           )}
         </div>

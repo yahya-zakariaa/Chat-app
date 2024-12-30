@@ -25,9 +25,7 @@ const protectedRoute = async (req, res, next) => {
     next();
   } catch (error) {
     console.log("error in protectedRoute middleware", error);
-    if (error.message.contains("timed out after")) {
-      return req.user = null
-    }
+    req.user = null;
     res.status(500).json({ message: "Internal server error" });
   }
 };

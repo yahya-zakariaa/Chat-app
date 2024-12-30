@@ -11,6 +11,7 @@ import {
   acceptFriendRequest,
   rejectFriendRequest,
   removeFriend,
+  cancelFriendRequest,
 } from "../controllers/user.controller.js";
 const router = express.Router();
 
@@ -23,6 +24,11 @@ router.post("/send-friend-request", protectedRoute, sendFriendRequest);
 router.post("/accept-friend-request", protectedRoute, acceptFriendRequest);
 router.post("/reject-friend-request", protectedRoute, rejectFriendRequest);
 router.post("/remove-friend", protectedRoute, removeFriend);
+router.delete(
+  "/cancel-friend-request/:userId",
+  protectedRoute,
+  cancelFriendRequest
+);
 
 // user profile
 router.put("/update-profile", protectedRoute, updateProfileAvatar);

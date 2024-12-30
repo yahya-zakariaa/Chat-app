@@ -4,7 +4,8 @@ const userSchema = new mongoose.Schema(
   {
     username: {
       type: String,
-      required: true,
+      required: [true, "username is required"],
+      unique: [true, "username is already in use"],
     },
     email: {
       type: String,
@@ -27,6 +28,10 @@ const userSchema = new mongoose.Schema(
         friendshipDate: { type: Date, default: Date.now },
       },
     ],
+    bio: {
+      type: String,
+      default: "",
+    },
   },
   { timestamps: true }
 );

@@ -12,7 +12,8 @@ const getUserFrindes = async (req, res) => {
   }
   try {
     const userFriends = await User.findById(userId)
-    .populate("friends.id").exec()
+      .populate("friends.id")
+      .exec();
     console.log(userFriends.friends);
 
     if (!userFriends) {
@@ -113,6 +114,18 @@ const sendFriendRequest = async (req, res) => {
         message: "You are already friends with this user",
       });
     }
+    const checkIsExist = await FriendRequest.countDocuments({
+      senderId: sender._id,
+      receviedId: user._id,
+      status: "pending",
+    });
+
+    if (checkIsExist) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Friend request already sent",
+      });
+    }
     const friendRequest = await FriendRequest.create({
       senderId: sender._id,
       receviedId: user._id,
@@ -127,7 +140,7 @@ const sendFriendRequest = async (req, res) => {
     return res.status(200).json({
       status: "success",
       data: { friendRequest },
-      message: "Friend request sent successfully",
+      message: "request sent",
     });
   } catch (error) {
     res.status(500).json({
@@ -217,6 +230,34 @@ const rejectFriendRequest = async (req, res) => {
     return res.status(200).json({
       status: "success",
       message: "request rejected",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: error.message || "something went wrong.",
+    });
+  }
+};
+
+const cancelFriendRequest = async (req, res) => {
+  const { userId } = req.params;
+  const { _id } = req.user;
+  if (!userId) {
+    return res.status(400).json({
+      status: "fail",
+      message: "please provide friend id",
+    });
+  }
+  try {
+    await FriendRequest.findOneAndDelete({
+      senderId: _id,
+      receviedId: userId,
+      status: "pending",
+    });
+
+    res.status(200).json({
+      status: "deleted",
+      message: "Request is canceled ",
     });
   } catch (error) {
     return res.status(500).json({
@@ -358,7 +399,7 @@ const searchNewFriends = async (req, res) => {
   try {
     const users = await User.find({
       username: { $regex: username, $options: "i" },
-    }).select("-password", "-__v", "email", "friends");
+    }).select(["-password", "-__v", "-email"]);
     if (!users) {
       return res.status(204).json({ status: "success", message: " Not found" });
     }
@@ -374,15 +415,38 @@ const searchNewFriends = async (req, res) => {
 const discoverNewFriends = async (req, res) => {
   const { _id } = req.user;
   try {
-    const users = await User.find({
+    let users = await User.find({
       _id: { $ne: _id, $nin: req.user.friends },
-    }).select(["-password", "-__v", "-email", "-friends"]);
+    }).select(["-password", "-__v", "-email"]);
+
+    const PendingRequests = await FriendRequest.find({
+      senderId: _id,
+      status: "pending",
+    });
+    console.log(PendingRequests);
+
+    users = users.map((user) => {
+      const isPending = PendingRequests.some((req) => {
+        console.log(req);
+
+        return req.receviedId.toString() === user._id.toString();
+      });
+
+      const isFriend = req.user.friends.includes(user._id.toString());
+      console.log(isPending, isFriend);
+
+      return {
+        ...user.toObject(),
+        isPending,
+        isFriend,
+      };
+    });
     if (!users) {
       return res.status(204).json({ status: "success", message: " Not found" });
     }
     res.status(200).json({
       status: "success",
-      data: { result: users },
+      data: { users },
     });
   } catch (error) {
     return res.status(500).json({
@@ -402,4 +466,5 @@ export {
   removeFriend,
   searchNewFriends,
   discoverNewFriends,
+  cancelFriendRequest,
 };

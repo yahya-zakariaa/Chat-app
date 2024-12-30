@@ -52,6 +52,48 @@ body {
   }
 }
 
+.descover-loader,
+.descover-loader:before,
+.descover-loader:after {
+  border-radius: 50%;
+  width: 2.5em;
+  height: 2.5em;
+  animation-fill-mode: both;
+  animation: bblFadInOut 1.8s infinite ease-in-out;
+}
+.descover-loader {
+  color: #fff;
+  font-size: 7px;
+  position: relative;
+  text-indent: -9999em;
+  transform: translateZ(0);
+  animation-delay: -0.16s;
+}
+.descover-loader:before,
+.descover-loader:after {
+  content: "";
+  position: absolute;
+  top: 0;
+}
+.descover-loader:before {
+  left: -3.5em;
+  animation-delay: -0.32s;
+}
+.descover-loader:after {
+  left: 3.5em;
+}
+
+@keyframes bblFadInOut {
+  0%,
+  80%,
+  100% {
+    box-shadow: 0 2.5em 0 -1.3em;
+  }
+  40% {
+    box-shadow: 0 2.5em 0 0;
+  }
+}
+
 .chat:hover {
   background-color: #a1a1a179;
 }
@@ -62,26 +104,28 @@ body {
   scrollbar-width: thin;
   scrollbar-color: #4d4d4d #00000000;
   scroll-margin: 0 10px;
-  
 }
 
-.descover-friends , .chats {
+.users-container,
+.chats {
   scroll-behavior: smooth;
   scrollbar-gutter: stable;
 }
 
-.descover-friends::-webkit-scrollbar,.chats::-webkit-scrollbar {
-  width: 6px; 
+.users-container::-webkit-scrollbar,
+.chats::-webkit-scrollbar {
+  width: 6px;
 }
 
 /* تخصيص لون شريط التمرير */
-.descover-friends::-webkit-scrollbar-thumb,.chats::-webkit-scrollbar-thumb{
-  background-color: #4d4d4d;  
+.users-container::-webkit-scrollbar-thumb,
+.chats::-webkit-scrollbar-thumb {
+  background-color: #4d4d4d;
   border-radius: 99999px;
 }
 
 /* تخصيص الخلفية */
-.descover-friends::-webkit-scrollbar-track, .chats::-webkit-scrollbar-track {
-  background-color: transparent; 
+.users-container::-webkit-scrollbar-track,
+.chats::-webkit-scrollbar-track {
+  background-color: transparent;
 }
-
