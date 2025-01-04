@@ -4,30 +4,44 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
 import defaultAvatar from "../../public/default-avatar.png";
+import toast from "react-hot-toast";
+import "cropperjs/dist/cropper.css";
+import useImageHandlerStore from "@/store/useImageHandlerStore";
 
 export default function DefaultRightSideContent() {
   const { user, isUpdatingProfile, updateUserPic } = useAuthStore();
-  const [selectedImage, setSelectedImage] = useState();
-
+  const { setSelectedImage, croppedImage, setIsUpdatingAvatar } =
+    useImageHandlerStore();
   const handelUpdateProfilePic = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      return toast.error("Image size should be less than 2MB");
+    }
+    if (
+      file.type !== "image/jpeg" &&
+      file.type !== "image/png" &&
+      file.type !== "image/jpg"
+    ) {
+      return toast.error(
+        "Invalid file type - Please upload a valid image type"
+      );
+    }
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = async () => {
       const base64Image = reader.result;
+      setIsUpdatingAvatar(true);
       setSelectedImage(base64Image);
-      await updateUserPic({ avatar: base64Image });
+      // await updateUserPic({ avatar: base64Image });
     };
   };
 
   return (
-    <div className="default-content flex flex-col justify-between pt-20 items-center w-full h-full">
+    <div className="default-content flex flex-col justify-between pt- items-center w-full h-full ">
       <div className="content flex-col justify-start flex items-center">
-        <h1 className="  font-bold text-[26px] mb-10">
-          Welcome, <span className=" border-b-2">{user?.username}</span> to
-          Nexus chat
-        </h1>
+        <h1 className="  font-bold text-[26px] mb-10">Welcome to Nexus chat</h1>
+
         <div className="user-image-container relative">
           <input
             type="file"
@@ -37,7 +51,7 @@ export default function DefaultRightSideContent() {
             accept="image/*"
             className="w-[45px] cursor-pointer inline-flex z-[6] opacity-0 rounded-full  h-[45px] top-[63%]  border-[#050a19] border-[7px] right-[-1%] bg-[#0f225c] absolute text-[20px] font-bold "
           />
-          <div className=" absolute cursor-pointer z-[1] w-fit h-fit top-[63%] right-0 bg-blue-950 px-3 py-3 flex justify-center items-center rounded-full">
+          <div className=" absolute cursor-pointer z-[1] w-fit h-fit top-[63%] right-0 bg-[#010101]  px-3 py-3 flex justify-center items-center rounded-full">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -53,18 +67,18 @@ export default function DefaultRightSideContent() {
           <Image
             width={150}
             height={150}
-            src={selectedImage || user?.avatar || defaultAvatar}
+            src={croppedImage || user?.avatar || defaultAvatar}
             alt="user avatar"
-            priority
-            blurDataURL={selectedImage || user?.avatar || defaultAvatar}
-            className="user-image w-[150px] h-[150px]  rounded-full mb-4 mx-auto"
+            priority={true}
+            blurDataURL={croppedImage || user?.avatar || defaultAvatar}
+            className="user-image  border-[#ffffffcb] border-2  w-[150px] h-[150px] object-cover  rounded-full overflow-hidden mb-4 mx-auto"
           />
         </div>
         <Link
           href="/profile"
-          className="font-bold text-[18px] px-5 py-1 mt-3 rounded-lg bg-blue-950"
+          className="font-bold text-[18px] px-5 py-1.5 mt-3 rounded-lg bg-[#010101] border-[#ffffff13] border text-white"
         >
-          veiw profile
+          View Profile
         </Link>
       </div>
       <footer className="py-3 flex flex-col gap-3 justify-center  items-center w-full">

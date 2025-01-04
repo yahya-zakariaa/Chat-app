@@ -1,21 +1,6 @@
 import User from "../models/user.model.js";
+import { createError } from "../utils/utils.js";
 import Message from "./../models/message.modal.js";
-
-const getUserFrindes = async (req, res) => {
-  const userId = req.user._id;
-  try {
-    const filteredUsers = await User.find({ _id: { $ne: userId } }).select(
-      "-password"
-    );
-    res.status(200).json({ status: "success", data: { users: filteredUsers } });
-  } catch (error) {
-    console.log("error in getUserFrindes", error);
-    res.status(500).json({
-      status: "error",
-      message: error.message || "internal server error",
-    });
-  }
-};
 
 const getMessages = async (req, res) => {
   try {
@@ -30,15 +15,16 @@ const getMessages = async (req, res) => {
 
     res.status(200).json({ status: "success", data: { messages } });
   } catch (error) {
-    console.log("error in getMessages", error);
-    res.status(500).json({
-      status: "error",
-      message: error.message || "internal server error",
-    });
+    return createError(
+      error.message || "Something went wrong - Try again later",
+      500,
+      "error",
+      next
+    );
   }
 };
 
-const sendMessage = async (req, res) => {
+const sendMessage = async (req, res, next) => {
   try {
     const { id: reseverId } = req.params;
     const senderId = req.user._id;
@@ -58,11 +44,12 @@ const sendMessage = async (req, res) => {
     await message.save();
     // socket io code ===>
   } catch (error) {
-    console.log("error in sendMessage", error);
-    res.status(500).json({
-      status: "error",
-      message: error.message || "internal server error",
-    });
+    return createError(
+      error.message || "Something went worng - Try again later",
+      500,
+      "error",
+      next
+    );
   }
 };
-export { getUserFrindes, getMessages, sendMessage };
+export { getMessages, sendMessage };

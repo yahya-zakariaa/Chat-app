@@ -1,11 +1,12 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useToggleComponents } from "@/store/useToggleComponents.js";
 import { useAuthStore } from "@/store/useAuthStore.js";
 import { useUserStore } from "@/store/useUserStore.js";
-import { useToggleComponents } from "@/store/useToggleComponents.js";
 import DefaultRightSideContent from "@/components/DefaultRightSideContent";
 import DescoverFriends from "@/components/DescoverFriends";
+import Notifications from "@/components/Notifications";
 import useWindowWidth from "@/hooks/useWindowWidth";
 export default function Home() {
   const { getFriends, friends, descoverResult, getFriendRequest } =
@@ -17,8 +18,7 @@ export default function Home() {
   const components = {
     default: <DefaultRightSideContent />,
     descoverFriends: <DescoverFriends />,
-    notifications: <div>Notifications</div>,
-    
+    notifications: <Notifications />,
   };
   const [currentComponent, setCurrentComponent] = useState(
     components[activeComponent]

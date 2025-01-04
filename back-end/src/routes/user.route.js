@@ -21,9 +21,9 @@ router.get("/get-friend-requests", protectedRoute, getFriendRequests);
 router.get("/get-friends", protectedRoute, getUserFrindes);
 router.post("/search-new-friends", protectedRoute, searchNewFriends);
 router.post("/send-friend-request", protectedRoute, sendFriendRequest);
-router.post("/accept-friend-request", protectedRoute, acceptFriendRequest);
-router.post("/reject-friend-request", protectedRoute, rejectFriendRequest);
-router.post("/remove-friend", protectedRoute, removeFriend);
+router.post("/accept-friend-request/:requestId", protectedRoute, acceptFriendRequest);
+router.post("/reject-friend-request/:requestId", protectedRoute, rejectFriendRequest);
+router.delete("/remove-friend/friendId", protectedRoute, removeFriend);
 router.delete(
   "/cancel-friend-request/:userId",
   protectedRoute,

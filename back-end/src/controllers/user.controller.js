@@ -1,26 +1,31 @@
 import FriendRequest from "../models/friendRequest.modal.js";
 import User from "../models/user.model.js";
+import { isValidImage } from "../utils/ImageValidetor.js";
+import { createError } from "../utils/utils.js";
 import cloudinary from "./../lib/cloudinary.js";
 
-const getUserFrindes = async (req, res) => {
+const getUserFrindes = async (req, res, next) => {
   const userId = req.user._id;
   if (!userId) {
-    return res.status(401).json({
-      status: "fail",
-      message: "something went wrong - Please Login again",
-    });
+    return createError(
+      "Something went wrong - Login again",
+      401,
+      "error",
+      next
+    );
   }
   try {
     const userFriends = await User.findById(userId)
       .populate("friends.id")
       .exec();
-    console.log(userFriends.friends);
 
     if (!userFriends) {
-      return res.status(400).json({
-        status: "fail",
-        message: "something went wrong - Please try again",
-      });
+      return createError(
+        "Something went wrong - Try again",
+        500,
+        "error",
+        next
+      );
     }
     return res.status(200).json({
       status: "success",
@@ -30,25 +35,33 @@ const getUserFrindes = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({
-      status: "error",
-      message: error.message || "something went wrong, please try again",
-    });
+    return createError(
+      error.message || "Something went wrong - Try again",
+      500,
+      "error",
+      next
+    );
   }
 };
-const getFriendRequests = async (req, res) => {
+const getFriendRequests = async (req, res, next) => {
   const userId = req.user._id;
   if (!userId) {
-    return res.status(401).json({
-      status: "fail",
-      message: "something went wrong - Please Login again",
-    });
+    return createError(
+      "Something went wrong - Login again",
+      401,
+      "error",
+      next
+    );
   }
   try {
     const friendRequests = await FriendRequest.find({
       receviedId: userId,
       status: "pending",
-    }).sort({ createdAt: -1 });
+    })
+      .sort({ createdAt: -1 })
+      .populate({ path: "senderId", select: "-password -__v -email" })
+      .exec();
+
     if (friendRequests.length < 1) {
       return res.status(200).json({
         status: "success",
@@ -64,66 +77,75 @@ const getFriendRequests = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({
-      status: "error",
-      message: error.message || "something went wrong, please try again",
-    });
+    createError(
+      error.message || "Something went wrong - Try again",
+      500,
+      "error",
+      next
+    );
   }
 };
-const sendFriendRequest = async (req, res) => {
+const sendFriendRequest = async (req, res, next) => {
   const { id } = req.body;
   const { _id } = req.user;
 
   if (!id) {
-    return res.status(400).json({
-      status: "fail",
-      message: "Please provide user id",
-    });
-  }
-  if (_id === id) {
-    return res.status(400).json({
-      status: "fail",
-      message: "You can't send friend request to yourself",
-    });
+    return createError(
+      "clinet side error - Please provide user id",
+      400,
+      "fail",
+      next
+    );
   }
   if (!_id) {
-    return res.status(401).json({
-      status: "fail",
-      message: "something went wrong - Please Login again",
-    });
+    return createError(
+      "Something went wrong - Login again",
+      401,
+      "error",
+      next
+    );
+  }
+  if (_id === id) {
+    return createError(
+      "You cannot send friend request to yourself",
+      400,
+      "fail"
+    );
   }
 
   try {
     const user = await User.findById(id);
     if (!user) {
-      return res.status(400).json({
-        status: "fail",
-        message: "User not found",
-      });
+      return createError("User not found - Try again", 400, "fail", next);
     }
     const sender = await User.findById(_id);
     if (!sender) {
-      return res.status(401).json({
-        status: "fail",
-        message: "something went wrong - Please Login again",
-      });
+      return createError(
+        "Something went wrong - Login again",
+        401,
+        "error",
+        next
+      );
     }
     if (sender.friends.includes(id)) {
-      return res.status(400).json({
-        status: "fail",
-        message: "You are already friends with this user",
-      });
+      return createError("You are already friends with this user", 400, "fail");
     }
-    const checkIsExist = await FriendRequest.countDocuments({
-      senderId: sender._id,
-      receviedId: user._id,
+    const checkIsExist = await FriendRequest.findOne({
+      senderId: user._id,
+      receviedId: sender._id,
       status: "pending",
     });
 
     if (checkIsExist) {
-      return res.status(400).json({
-        status: "fail",
-        message: "Friend request already sent",
+      user.friends.push(sender._id);
+      sender.friends.push(user._id);
+      await user.save();
+      await sender.save();
+      checkIsExist.status = "accepted";
+      await checkIsExist.save();
+      return res.status(200).json({
+        status: "success",
+        message: "request accepted",
       });
     }
     const friendRequest = await FriendRequest.create({
@@ -132,236 +154,311 @@ const sendFriendRequest = async (req, res) => {
       status: "pending",
     });
     if (!friendRequest) {
-      return res.status(500).json({
-        status: "fail",
-        message: "Something went wrong - please try again",
-      });
+      return createError(
+        "Something went wrong -  Try again",
+        500,
+        "error",
+        next
+      );
     }
-    return res.status(200).json({
+    return res.status(201).json({
       status: "success",
       data: { friendRequest },
       message: "request sent",
     });
   } catch (error) {
-    res.status(500).json({
-      status: "error",
-      message: error.message || "something went wrong.",
-    });
+    return createError(
+      error.message || "Something went wrong.",
+      500,
+      "fail",
+      next
+    );
   }
 };
-const acceptFriendRequest = async (req, res) => {
-  const { requestId } = req.body;
+const acceptFriendRequest = async (req, res, next) => {
+  const { requestId } = req.params;
   const { _id } = req.user;
 
   if (!requestId) {
-    return res.status(400).json({
-      status: "fail",
-      message: "Please provide friend request id",
-    });
+    return createError(
+      "client side error - Please provide request id",
+      400,
+      "fail",
+      next
+    );
   }
   if (!_id) {
-    return res.status(401).json({
-      status: "fail",
-      message: "Unauthorized - Please Login first",
-    });
+    return createError(
+      "Something went wrong - Login again",
+      401,
+      "error",
+      next
+    );
   }
 
   try {
     const friendRequest = await FriendRequest.findById(requestId);
     if (!friendRequest) {
-      return res.status(400).json({
-        status: "fail",
-        message: "Friend request not found or already accepted",
-      });
+      return createError(
+        "Request not found or already accepted",
+        400,
+        "fail",
+        next
+      );
     }
 
     const receiver = await User.findById(_id);
     if (!receiver) {
-      return res.status(401).json({
-        status: "fail",
-        message: "User not found - Please Login again",
-      });
+      return createError(
+        "Something went wrong - Login again",
+        401,
+        "error",
+        next
+      );
     }
 
     const sender = await User.findById(friendRequest.senderId);
     if (!sender) {
-      return res.status(400).json({
-        status: "fail",
-        message: "User not found",
-      });
+      return createError(
+        "Something went wrong - Try again",
+        400,
+        "error",
+        next
+      );
     }
     receiver.friends.push(friendRequest.senderId);
     sender.friends.push(_id);
-    receiver.save();
-    sender.save();
+    await receiver.save();
+    await sender.save();
     friendRequest.status = "accepted";
-    friendRequest.save();
+    await friendRequest.save();
     return res.status(200).json({
       status: "success",
       data: { friendRequest },
       message: "Friend request accepted successfully",
     });
   } catch (error) {
-    return res.status(500).json({
-      status: "error",
-      message: error.message || "something went wrong.",
-    });
+    return createError(
+      error.message || "Something went wrong.",
+      500,
+      "fail",
+      next
+    );
   }
 };
-const rejectFriendRequest = async (req, res) => {
-  const { requestId } = req.body;
+const rejectFriendRequest = async (req, res, next) => {
+  const { requestId } = req.params;
 
   if (!requestId) {
-    return res.status(400).json({
-      status: "fail",
-      message: "Please provide request id",
-    });
+    return createError(
+      "client side error - Please provide request id",
+      400,
+      "error",
+      next
+    );
   }
   try {
     const friendRequest = await FriendRequest.findById(requestId);
     if (!friendRequest) {
-      return res.status(400).json({
-        status: "fail",
-        message: "request not found or already accepted",
-      });
+      return createError(
+        "Request not found or already rejected",
+        400,
+        "error",
+        next
+      );
     }
     friendRequest.status = "rejected";
-    friendRequest.save();
+    await friendRequest.save();
     return res.status(200).json({
       status: "success",
       message: "request rejected",
     });
   } catch (error) {
-    return res.status(500).json({
-      status: "error",
-      message: error.message || "something went wrong.",
-    });
+    return createError(
+      error.message || "Something went wrong - Try again",
+      500,
+      "error",
+      next
+    );
   }
 };
 
-const cancelFriendRequest = async (req, res) => {
+const cancelFriendRequest = async (req, res, next) => {
   const { userId } = req.params;
   const { _id } = req.user;
   if (!userId) {
-    return res.status(400).json({
-      status: "fail",
-      message: "please provide friend id",
-    });
+    return createError(
+      "client side error - Please Provide user id",
+      400,
+      "fail",
+      next
+    );
   }
   try {
-    await FriendRequest.findOneAndDelete({
+    const Request = await FriendRequest.findOneAndDelete({
       senderId: _id,
       receviedId: userId,
       status: "pending",
     });
 
+    if (!Request) {
+      return createError(
+        "Request not found or already canceled",
+        400,
+        "fail",
+        next
+      );
+    }
+    await Request.save();
     res.status(200).json({
       status: "deleted",
       message: "Request is canceled ",
     });
   } catch (error) {
-    return res.status(500).json({
-      status: "error",
-      message: error.message || "something went wrong.",
-    });
+    return createError(
+      error.message || "Something went wrong.",
+      500,
+      "fail",
+      next
+    );
   }
 };
-const removeFriend = async (req, res) => {
-  const { friendId } = req.body;
+const removeFriend = async (req, res, next) => {
+  const { friendId } = req.params;
   const { _id } = req.user;
   if (!friendId) {
-    return res.status(400).json({
-      status: "fail",
-      message: "Please provide friend id",
-    });
+    return createError(
+      "client side error - Please provide friend id",
+      400,
+      "fail",
+      next
+    );
   }
 
   try {
     const user = await User.findById(_id);
     if (!user) {
-      return res.status(400).json({
-        status: "fail",
-        message: "something went wrong - Please Login again",
-      });
+      return createError(
+        "Something went wrong - Login again",
+        401,
+        "fail",
+        next
+      );
     }
     const friend = await User.findById(friendId);
     if (!friend) {
-      return res.status(400).json({
-        status: "fail",
-        message: "User not found",
-      });
+      return createError("User not found - Try again", 400, "fail", next);
     }
     if (!user.friends.includes(friendId)) {
-      return res.status(400).json({
-        status: "fail",
-        message: "You are not friends with this user",
-      });
+      return createError("User is not your friend", 400, "fail", next);
     }
     if (friend.friends.includes(_id)) {
       friend.friends.pull(_id);
-      friend.save();
+      await friend.save();
       user.friends.pull(friendId);
-      user.save();
+      await user.save();
       return res.status(200).json({
         status: "success",
         message: "Friend removed",
       });
     }
   } catch (error) {
-    return res.status(500).json({
-      status: "error",
-      message: error.message || "something went wrong.",
-    });
+    return createError(
+      error.message || "Something went wrong - Try again",
+      500,
+      "fail",
+      next
+    );
   }
 };
-const updateProfileAvatar = async (req, res) => {
+const updateProfileAvatar = async (req, res, next) => {
   const { avatar } = req.body;
   const { _id } = req.user;
 
   if (!avatar) {
-    res.status(400).json({
-      status: "fail",
-      message: "Please provide avatar picture",
-    });
+    return createError(
+      " client side error - Please provide an avatar",
+      400,
+      "error",
+      next
+    );
+  }
+
+  if (!_id) {
+    return createError(
+      "Something went wrong - Login again",
+      401,
+      "error",
+      next
+    );
+  }
+  if (!isValidImage(avatar)) {
+    return createError(
+      "Invalid file type - Please upload a valid image type",
+      415,
+      "error",
+      next
+    );
   }
 
   try {
-    const uploadRes = await cloudinary.uploader.upload(avatar);
-    if (!uploadRes) {
-      res.status(500).json({
-        status: "fail",
-        message: error.message || "something went wrong.",
-      });
+    const uploadRes = await cloudinary.uploader.upload(avatar, {
+      folder: "user_avatars",
+      public_id: `avatar_${_id}`,
+      overwrite: true,
+      allowed_formats: ["jpg", "png", "jpeg"],
+    });
+    if (!uploadRes || !uploadRes.secure_url) {
+      return createError(
+        "Failed to upload avatar - Try again",
+        500,
+        "error",
+        next
+      );
     }
     const userUpdated = await User.findByIdAndUpdate(
       _id,
       { avatar: uploadRes.secure_url },
-      { new: true }
+      { new: true, runValidators: true }
     ).select("-password");
     if (!userUpdated) {
-      return res
-        .status(401)
-        .json({ status: "fail", message: "User not found" });
+      return createError(
+        "Something went wrong - Login again",
+        401,
+        "error",
+        next
+      );
     }
+    await userUpdated.save();
     res.status(200).json({
       status: "success",
       data: { user: userUpdated },
       message: "profile picutre updated successfully",
     });
   } catch (error) {
-    res.status(500).json({
-      status: "error",
-      message: error.message || "something went wrong.",
-    });
+    if (error.name === "CloudinaryError") {
+      return createError(
+        "Cloudinary service error - Try again later",
+        503,
+        "fail",
+        next
+      );
+    }
+    return createError(
+      error.message || "Something went wrong - Try again",
+      500,
+      "fail",
+      next
+    );
   }
 };
-const updateProfileName = async (req, res) => {
+const updateProfileName = async (req, res, next) => {
   const { username } = req.body;
   const { _id } = req.user;
   if (!username) {
     return res.status(400).json({
       status: "fail",
-      message: "Please provide username",
+      message: " client side error - Please provide a username",
     });
   }
 
@@ -372,29 +469,36 @@ const updateProfileName = async (req, res) => {
       { new: true }
     ).select("-password");
     if (!userUpdated) {
-      return res
-        .status(401)
-        .json({ status: "fail", message: "User not found" });
+      return createError(
+        "something went wrong - Login again",
+        401,
+        "error",
+        next
+      );
     }
+    await userUpdated.save();
     res.status(200).json({
       status: "success",
       data: { user: userUpdated },
       message: "profile name updated successfully",
     });
   } catch (error) {
-    res.status(500).json({
-      status: "error",
-      message: error.message || "something went wrong.",
-    });
+    return createError(
+      error.message || "Something went wrong - Try again",
+      500,
+      "fail",
+      next
+    );
   }
 };
-const searchNewFriends = async (req, res) => {
+const searchNewFriends = async (req, res, next) => {
   const { username } = req.body;
   if (!username) {
-    return res.status(400).json({
-      status: "fail",
-      message: "Please provide username",
-    });
+    return createError(
+      "client side error - Please provide username",
+      400,
+      "fail"
+    );
   }
   try {
     const users = await User.find({
@@ -405,54 +509,63 @@ const searchNewFriends = async (req, res) => {
     }
     res.status(200).json({ status: "success", data: { users } });
   } catch (error) {
-    res.status(500).json({
-      status: "error",
-      message: error.message || "something went wrong.",
-    });
+    return createError(
+      error.message || "Something went wrong.",
+      500,
+      "fail",
+      next
+    );
   }
 };
 
-const discoverNewFriends = async (req, res) => {
+const discoverNewFriends = async (req, res, next) => {
   const { _id } = req.user;
+
+  if (!_id) {
+    return createError("Something went wrong - Login again", 401, "fail");
+  }
   try {
     let users = await User.find({
       _id: { $ne: _id, $nin: req.user.friends },
     }).select(["-password", "-__v", "-email"]);
 
     const PendingRequests = await FriendRequest.find({
-      senderId: _id,
+      $or: [{ senderId: _id }, { receviedId: _id }],
       status: "pending",
     });
-    console.log(PendingRequests);
 
     users = users.map((user) => {
       const isPending = PendingRequests.some((req) => {
-        console.log(req);
-
         return req.receviedId.toString() === user._id.toString();
       });
 
+      const isReceivedRequest = PendingRequests.some((req) => {
+        return req.senderId.toString() === user._id.toString();
+      });
+
       const isFriend = req.user.friends.includes(user._id.toString());
-      console.log(isPending, isFriend);
 
       return {
         ...user.toObject(),
         isPending,
+        isReceivedRequest,
         isFriend,
       };
     });
     if (!users) {
-      return res.status(204).json({ status: "success", message: " Not found" });
+      return res.status(204).json({ status: "success", data: { users: [] } });
     }
-    res.status(200).json({
+    return res.status(200).json({
       status: "success",
       data: { users },
     });
   } catch (error) {
-    return res.status(500).json({
-      status: "error",
-      message: error.message || "something went wrong.",
-    });
+    return createError(
+      error.message || "Something went wrong - Try again",
+      500,
+      "fail",
+      next
+    );
   }
 };
 export {

@@ -7,29 +7,53 @@ import { connectDB } from "./src/lib/db.js";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import cors from "cors";
-dotenv.config();
-
+import { createError } from "./src/utils/utils.js";
+import GlobalErrorHandler from "./src/middleware/GlobalErrorHandler.middleware.js";
+// Create the Express app
 const app = express();
 const port = process.env.PORT || 3002;
 
-// global middlewares
-app.use(express.json());
-app.use(cookieParser());
-app.use(express.urlencoded({ extended: true }));
+// Load environment variables
+dotenv.config();
+
+// Set up CORS
 app.use(
   cors({
-    origin: "http://localhost:3000", // السماح لجميع النطاقات
-    credentials: true, // للسماح بإرسال الكوكيز مع الطلبات
+    origin: process.env.CORS_ORIGIN || "http://localhost:3000", // Dynamic origin from env
+    credentials: true, // Allow sending cookies
   })
 );
 
+// Global middlewares
+app.use(express.json());
+app.use(cookieParser());
 app.use(helmet());
+app.use(express.json({ limit: "7mb" }));
+app.use(express.urlencoded({ limit: "7mb", extended: true }));
+
+// Routes
 app.use("/api/auth", authRoute);
 app.use("/api/message", messageRoute);
 app.use("/api/user", userRoute);
 
-// start server
-app.listen(port, () => {
-  console.log(`connect on port ${port}`);
-  connectDB();
+// Handle 404 for non-existing routes
+app.all("*", (req, res, next) => {
+  return next(createError("Page not found", 404, "error", next));
 });
+
+// Global error handler
+app.use(GlobalErrorHandler);
+
+// Start the server after ensuring DB connection
+const startServer = async () => {
+  try {
+    await connectDB(); // Ensure DB connection first
+    app.listen(port, () => {
+      console.log(`Server is running on port ${port}`);
+    });
+  } catch (error) {
+    console.error("Error connecting to the database", error);
+  }
+};
+
+startServer();

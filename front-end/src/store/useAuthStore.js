@@ -19,14 +19,8 @@ export const useAuthStore = create((set) => ({
       set({ user: res?.data?.data?.user });
     } catch (error) {
       set({ user: null });
-      console.log(error);
-
       toast.error(
-        error?.response.data.message
-          ? error.response.data.message
-          : error?.message.startsWith("Network Erorr")
-          ? "please check internet conection"
-          : "somitheng went worng"
+        error?.response.data.message || "Something want worng - Login again"
       );
     } finally {
       set({ isCheckingAuth: false });
@@ -67,8 +61,10 @@ export const useAuthStore = create((set) => ({
         email,
         password,
       });
+
       set({ user: res?.data?.data?.user });
-      toast.success("Logged in successfully");
+      toast.success("welcome back");
+      return res;
     } catch (error) {
       set({ user: null });
       toast.error(
@@ -87,7 +83,7 @@ export const useAuthStore = create((set) => ({
     set({ isLoggingOut: true });
     try {
       await axiosInstance.post("auth/logout");
-      toast.error("Logged out successfully");
+      toast.success("Logged out");
     } catch (error) {
       toast.error(
         error?.response.data.message

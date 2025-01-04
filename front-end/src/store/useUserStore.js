@@ -4,9 +4,6 @@ import { create } from "zustand";
 
 export const useUserStore = create((set) => ({
   friends: null,
-  friendsRequest: null,
-  friendSearchResult: null,
-  descoverResult: null,
   friendsCount: 0,
   friendsRequestCount: 0,
   isGettingFriends: true,
@@ -38,8 +35,8 @@ export const useUserStore = create((set) => ({
     try {
       set({ isGettingFriendRequest: true });
       const res = await axiosInstance.get("user/get-friend-requests");
-      set({ friendsRequest: res.data.data.requests });
       set({ friendsRequestCount: res.data.data.total });
+      return res;
     } catch (error) {
       console.log("error in get friend request", error);
       return toast.error(
@@ -53,7 +50,6 @@ export const useUserStore = create((set) => ({
     try {
       set({ isDescoveringNewFriends: true });
       const res = await axiosInstance.get("user/discover-new-friends");
-      set({ descoverResult: res?.data?.data?.result });
       return res;
     } catch (error) {
       console.log("error in descover new friends", error);
@@ -84,8 +80,6 @@ export const useUserStore = create((set) => ({
       const res = await axiosInstance.post("user/send-friend-request", {
         id: friendId,
       });
-
-      toast.success("Request send");
     } catch (error) {
       console.log("error in descover new friends", error);
       return toast.error(error.response.data.message || "something went worng");
@@ -96,6 +90,25 @@ export const useUserStore = create((set) => ({
     try {
       const res = await axiosInstance.delete(
         `user/cancel-friend-request/${userId}`
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  },
+
+  acceptFriendRequest: async (requestId) => {
+    try {
+      const res = await axiosInstance.post(
+        `user/accept-friend-request/${requestId}`
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  },
+  rejectFriendRequest: async (requestId) => {
+    try {
+      const res = await axiosInstance.post(
+        `user/reject-friend-request/${requestId}`
       );
     } catch (error) {
       console.log(error);

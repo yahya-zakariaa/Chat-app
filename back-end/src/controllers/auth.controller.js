@@ -1,9 +1,8 @@
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
-import { generateJWT } from "../utils/utils.js";
+import { createError, generateJWT } from "../utils/utils.js";
 import nodemailer from "nodemailer";
 import ResetCode from "../models/resetCode.modal.js";
-import mongoose from "mongoose";
 
 let failedLoginAttempts = {};
 const MAX_ATTEMPTS = 5;
@@ -25,10 +24,12 @@ const register = async (req, res) => {
   try {
     const { username, email, password } = req.body;
     if (!username || !email || !password) {
-      return res.status(400).json({
-        status: "fail",
-        message: "Please fill in all required fields.",
-      });
+      return createError(
+        "Please fill in all required fields.",
+        400,
+        "fail",
+        next
+      );
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -48,52 +49,32 @@ const register = async (req, res) => {
         user: {
           username: newUser.username,
           email: newUser.email,
-          avatar: null,
+          avatar: avatar || "",
           createdAt: newUser.createdAt,
         },
       },
-      message: "Account has been created successfully.",
+      message: "Account has been created.",
     });
   } catch (error) {
-    if (error instanceof mongoose.Error.ValidationError) {
-      return res.status(400).json({
-        status: "fail",
-        message: error.message,
-      });
-    }
-
-    if (
-      error.name === "MongoNetworkError" ||
-      error.name === "MongoTimeoutError"
-    ) {
-      return res.status(500).json({
-        status: "error",
-        message: "Database connection error. Please try again later.",
-      });
-    }
-
-    if (error.name === "MongoError" && error.code === 11000) {
-      return res.status(400).json({
-        status: "fail",
-        message: "Email already exists. Please use a different one.",
-      });
-    }
-
-    return res.status(500).json({
-      status: "error",
-      message: error.message || "Something went wrong. Please try again later.",
-    });
+    return createError(
+      error.message || "Something went wrong.",
+      500,
+      "fail",
+      next
+    );
   }
 };
 
-const login = async (req, res) => {
+const login = async (req, res, next) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.status(400).json({
-      status: "fail",
-      message: "Please provide both email and password.",
-    });
+    return createError(
+      "Please fill in all required fields.",
+      400,
+      "fail",
+      next
+    );
   }
 
   if (
@@ -115,10 +96,12 @@ const login = async (req, res) => {
         message += `${secondsLeft} second${secondsLeft > 1 ? "s" : ""}`;
       }
 
-      return res.status(429).json({
-        status: "fail",
-        message: message,
-      });
+      return createError(
+        message || "Too many failed attempts.",
+        429,
+        "fail",
+        next
+      );
     } else {
       resetFailedAttempts(email);
     }
@@ -128,25 +111,19 @@ const login = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) {
       incrementFailedAttempts(email);
-      return res.status(400).json({
-        status: "fail",
-        message: "Invalid email or password.",
-      });
+      return createError("Invalid email or password.", 401, "fail", next);
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       incrementFailedAttempts(email);
-      return res.status(400).json({
-        status: "fail",
-        message: "Invalid email or password.",
-      });
+      return createError("Invalid email or password.", 401, "fail", next);
     }
 
     resetFailedAttempts(email);
 
     const token = generateJWT(user._id, res);
-    res.status(200).json({
+    return res.status(200).json({
       status: "success",
       token,
       data: {
@@ -160,71 +137,54 @@ const login = async (req, res) => {
       },
     });
   } catch (error) {
-    if (error.name === "JsonWebTokenError") {
-      return res.status(401).json({
-        status: "fail",
-        message: "Invalid token.",
-      });
-    }
-
-    if (
-      error.name === "MongoNetworkError" ||
-      error.name === "MongoTimeoutError"
-    ) {
-      return res.status(500).json({
-        status: "error",
-        message: "Database connection error. Please try again later.",
-      });
-    }
-
-    if (error instanceof mongoose.Error.ValidationError) {
-      return res.status(400).json({
-        status: "fail",
-        message: error.message,
-      });
-    }
-
-    return res.status(500).json({
-      status: "error",
-      message: error.message || "Something went wrong. Please try again later.",
-    });
+    return createError(
+      error.message || "Something went wrong.",
+      500,
+      "fail",
+      next
+    );
   }
 };
 
 const logout = (req, res) => {
-  res.cookie("token", "", { httpOnly: true, expires: new Date(0) });
+  res.cookie("token", null, { httpOnly: true, expires: new Date(0) });
   res.status(200).json({ status: "success", message: "Logged out" });
 };
 
 const checkAuth = (req, res) => {
+  if (!req.user) {
+    return createError(
+      "Your session has expired - Login again",
+      401,
+      "fail",
+      next
+    );
+  }
   res.status(200).json({ status: "success", data: { user: req.user } });
 };
 
 // password recovery controllers
-const sendVerificationCode = async (req, res) => {
+const sendVerificationCode = async (req, res, next) => {
   const { email } = req.body;
-  console.log(email);
 
   if (!email) {
-    return res
-      .status(400)
-      .json({ status: "fail", message: "Please provide email" });
+    return createError(
+      "client side error - Please provide an email",
+      400,
+      "fail"
+    );
   }
 
   try {
     const user = await User.findOne({ email });
-    console.log(user);
-
     if (!user) {
-      return res
-        .status(400)
-        .json({ status: "fail", message: "Email not registretion" });
+      return createError("Email not registered", 404, "fail", next);
     }
 
     const code = Math.floor(100000 + Math.random() * 900000).toString();
-
-    console.log(code);
-
+    if (!code || code.length !== 6) {
+      return createError("Something went wrong - Try again", 500, "fail", next);
+    }
     await ResetCode.create({
       userId: user._id,
       code: code,
@@ -242,10 +202,13 @@ const sendVerificationCode = async (req, res) => {
       },
     });
 
+    if (!transporter) {
+      return createError("Email servece error - Try again", 500, "fail", next);
+    }
     const mailOptions = {
       from: process.env.EMAIL,
       to: email,
-      subject: "Password Reset",
+      subject: "Password recovery code",
       html: `
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" lang="en">
@@ -538,33 +501,48 @@ text-decoration: none
 </html>`,
     };
 
+    if (!mailOptions) {
+      return createError("Something went wrong - Try again", 400, "fail", next);
+    }
+
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
         console.log(error);
-        return res
-          .status(500)
-          .json({ status: "error", message: "Failed to send email" });
+        return createError(
+          error.message || "Something went wrong - Try again",
+          500,
+          "fail",
+          next
+        );
       }
-      console.log("Email sent: " + info.response);
-      res.status(200).json({ status: "success", message: "Email sent" });
+      res.status(200).json({
+        status: "success",
+        data: { message: "Email sent" },
+      });
     });
   } catch (error) {
     if (error.code === "EAUTH") {
-      return res.status(400).json({
-        status: "error",
-        message: "Unable to send the email, check your email settings.",
-      });
+      return createError(
+        "Unable to send email - Please check your email settings",
+        500,
+        "fail",
+        next
+      );
     }
     if (error.code === "ETIMEDOUT") {
-      return res.status(400).json({
-        status: "error",
-        message: "Email sending timed out, please try again later.",
-      });
+      return createError(
+        "Unable to send email - Please check your internet connection",
+        500,
+        "fail",
+        next
+      );
     }
-    return res.status(500).json({
-      status: "error",
-      message: error.message || "something went wrong.",
-    });
+    return createError(
+      error.message || "Something went wrong - Try again",
+      500,
+      "fail",
+      next
+    );
   }
 };
 
@@ -644,7 +622,6 @@ const resetPassword = async (req, res) => {
     });
   }
 };
-
 
 export {
   register,

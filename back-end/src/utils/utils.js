@@ -11,3 +11,10 @@ export const generateJWT = (userId, res) => {
   });
   return token;
 };
+
+export const createError = (msg = "Something went wrong", status = 500, statusType = "error", next) => {
+  const error = new Error(msg);
+  error.status = status;
+  error.statusType = statusType;
+  return next(error);
+};

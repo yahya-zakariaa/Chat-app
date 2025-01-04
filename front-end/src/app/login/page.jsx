@@ -11,8 +11,16 @@ export default function Login() {
   const router = useRouter();
 
   const handleSubmit = async (values) => {
-    const res = await login(values?.email, values?.password);
-    router.push("/");
+    try {
+      const res = await login(values?.email, values?.password);
+      console.log(res);
+
+      if (res?.status === 200) {
+        return router.push("/");
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const validationSchema = yup.object().shape({
@@ -31,9 +39,9 @@ export default function Login() {
     onSubmit: handleSubmit,
   });
   return (
-    <section className="bg-gray-50 dark:bg-gray-900 w-full ">
+    <section className=" dark:bg-[#000] w-full ">
       <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto min-h-screen lg:py-0">
-        <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
+        <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-[#0e0e0e] dark:border-[#a1a1a12c]">
           <h1 className="text-3xl font-bold leading-tight tracking-tight mt-5 text-center text-gray-900 md:text-2xl dark:text-white">
             Login
           </h1>
@@ -46,7 +54,7 @@ export default function Login() {
               <div>
                 <label
                   htmlFor="email"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                  className="block ps-1 mb-2 text-sm font-medium text-gray-900 dark:text-white"
                 >
                   Your email
                 </label>
@@ -57,18 +65,18 @@ export default function Login() {
                   onBlur={Formik.handleBlur}
                   name="email"
                   id="email"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  className="bg-[#0000005c] text-[#c9c9c9] placeholder:text-[#ffffff4a] border border-[#ffffff34]  rounded-lg focus:ring-transparent focus:border-[#ffffffa5] transition-all duration-300 outline-none block w-full p-2.5 "
                   placeholder="name@example.com"
                   required=""
                 />
-                <div className="errors text-[14px] text-red-500 rounded-lg mt-2 px-2">
+                <div className="errors text-[14px] text-red-400 rounded-lg mt-2 px-1">
                   {Formik.touched.email && Formik.errors.email}
                 </div>
               </div>
               <div className="relative">
                 <label
                   htmlFor="password"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                  className="block ps-1 mb-2 text-sm font-medium text-white "
                 >
                   Password
                 </label>
@@ -80,7 +88,7 @@ export default function Login() {
                   onBlur={Formik.handleBlur}
                   id="password"
                   placeholder="••••••••"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  className="bg-[#0000005c] text-[#c9c9c9] placeholder:text-[#ffffff4a] border border-[#ffffff34]  rounded-lg focus:ring-transparent focus:border-[#ffffffa5] transition-all duration-300 outline-none block w-full p-2.5 "
                   required=""
                 />
                 <div
@@ -97,7 +105,7 @@ export default function Login() {
                       <rect width="24" height="24" fill="none" />
                       <path
                         fill="none"
-                        stroke="#fff"
+                        stroke="#c9c9c9"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth="2"
@@ -113,20 +121,20 @@ export default function Login() {
                     >
                       <rect width="256" height="256" fill="none" />
                       <path
-                        fill="#fff"
+                        fill="#c9c9c9"
                         d="M245.48 125.57c-.34-.78-8.66-19.23-27.24-37.81C201 70.54 171.38 50 128 50S55 70.54 37.76 87.76c-18.58 18.58-26.9 37-27.24 37.81a6 6 0 0 0 0 4.88c.34.77 8.66 19.22 27.24 37.8C55 185.47 84.62 206 128 206s73-20.53 90.24-37.75c18.58-18.58 26.9-37 27.24-37.8a6 6 0 0 0 0-4.88M128 194c-31.38 0-58.78-11.42-81.45-33.93A134.8 134.8 0 0 1 22.69 128a134.6 134.6 0 0 1 23.86-32.06C69.22 73.42 96.62 62 128 62s58.78 11.42 81.45 33.94A134.6 134.6 0 0 1 233.31 128C226.94 140.21 195 194 128 194m0-112a46 46 0 1 0 46 46a46.06 46.06 0 0 0-46-46m0 80a34 34 0 1 1 34-34a34 34 0 0 1-34 34"
                       />
                     </svg>
                   )}
                 </div>
-                <div className="errors text-[14px] text-red-500 rounded-lg mt-2 px-2">
+                <div className="errors text-[14px] text-red-400 rounded-lg mt-2 px-1">
                   {Formik.touched.password && Formik.errors.password}
                 </div>
               </div>
               <div className="flex items-center justify-end">
                 <Link
                   href={"/forgot-password"}
-                  className="text-sm font-medium text-primary-600 hover:underline dark:text-primary-500"
+                  className="text-sm font-medium text-primary-600 hover:underline dark:text-white "
                 >
                   Forgot password?
                 </Link>
@@ -134,15 +142,15 @@ export default function Login() {
               <button
                 disabled={!Formik.isValid || isLoggingIn}
                 type="submit"
-                className="w-full text-white bg-blue-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                className="w-full text-black bg-[#eeeeee] hover:bg-[#e0e0e0e2] transition-all duration-300 cursor-pointer focus:ring-4 focus:outline-none  font-bold rounded-lg text-md px-5 py-2.5 text-center dark:focus:ring-primary-900 "
               >
-                {isLoggingIn ? "Loading..." : "Sign in"}
+                {isLoggingIn ? "Loading..." : "Login"}
               </button>
-              <p className="text-sm font-light text-gray-500 dark:text-gray-400">
+              <p className="text-sm font-light text-white ">
                 Don’t have an account yet ?{" "}
                 <Link
                   href={"/signup"}
-                  className="font-medium text-blue-500 hover:underline dark:text-primary-500"
+                  className="font-medium text-[#CCC] hover:underline "
                 >
                   Sign up
                 </Link>
