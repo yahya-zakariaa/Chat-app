@@ -26,7 +26,7 @@ export default function Home() {
   }, [activeComponent]);
   return (
     <>
-      <section className="md:w-[94.5%] w-full flex relative  flex-grow">
+      <section className="md:w-[94.5%] w-full flex relative  flex-grow md:h-full">
         <div className="main-page-layout   w-[100%] flex justify-between items-start md:items-center  h-full  ">
           <div className="chats-section  lg:w-[30%] relative w-full h-full rounded-xl overflow-hidden  bg-[#0d0d0d] flex flex-col ">
             <div className="chat-header h-[12%] sticky top-0 left-0 z-[20]   py-3 bg-[#0d0d0d] w-full  flex justify-between items-center md:px-2 px-3 ">
@@ -37,7 +37,7 @@ export default function Home() {
                 <input
                   type="text"
                   placeholder="Search with name"
-                  className="placeholder:text-[#9f9f9f] max-w-[150px] placeholder:text-[16px] text-[#ddd] text-[16px] bg-[#2f2f2f] rounded-full py-1 ps-3"
+                  className="placeholder:text-[#9f9f9f] min-w-[150px] max-w-[160px] placeholder:text-[16px] text-[#ddd] text-[16px] bg-[#2f2f2f] rounded-full py-1 ps-3"
                 />
                 <button className="search w-fit cursor-pointer   ">
                   <svg

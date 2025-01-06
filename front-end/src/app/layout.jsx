@@ -111,7 +111,7 @@ export default function RootLayout({ children }) {
             {currentComponent}
           </div>
         )}
-        <main className="flex flex-grow md:flex-row flex-col-reverse gap-2 justify-between items-center md:items-center w-full ">
+        <main className="flex flex-grow md:flex-row flex-col-reverse gap-2 max-h-[90%] justify-between items-center md:items-center w-full ">
           {protectedRoute.includes(pathname) && (
             <Sidebar logout={logout} reset={reset} />
           )}

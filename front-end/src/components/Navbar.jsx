@@ -4,7 +4,7 @@ import Image from "next/image";
 
 export default function Navbar({ setActiveComponent, setIsToggled, user }) {
   return (
-    <nav className=" w-[100%] md:px-5 px-3  rounded-xl mx-auto flex-shrink h-[10%] flex justify-between items-center bg-[#1a1a1a]">
+    <nav className=" w-[100%] md:px-5 px-3  rounded-xl mx-auto flex-shrink  h-[10%] flex justify-between items-center bg-[#1a1a1a]">
       <div className="userProfile flex items-center">
         <button
           onClick={() => {
