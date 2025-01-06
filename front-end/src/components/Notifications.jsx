@@ -1,11 +1,9 @@
-import Image from "next/image";
 import React, { useState } from "react";
-import defaultAvatar from "../../public/default-avatar.png";
 import { useUserStore } from "@/store/useUserStore";
 import { useEffect } from "react";
 import NotificationCard from "./NotificationCard";
 
-export default function Notifications({ setIsToggled }) {
+export default function Notifications({ setIsToggled, windowWidth, reset }) {
   const { getFriendRequest } = useUserStore();
   const [requests, setRequests] = useState([]);
 
@@ -30,7 +28,9 @@ export default function Notifications({ setIsToggled }) {
       <div className="notifications-container  w-full h-full px-4 pb-4 pt- flex flex-col items-center justify-center">
         <div className="header flex w-full items-center justify-start lg:gap-10 lg:m-0 mt-">
           <button
-            onClick={() => setIsToggled(false)}
+            onClick={() =>
+              windowWidth >= 1024 ? reset() : setIsToggled(false)
+            }
             className="mb-[2px] text-white lg:block hidden"
           >
             <svg
@@ -88,7 +88,11 @@ export default function Notifications({ setIsToggled }) {
         <div className="notifications-messages flex flex-col justify-start items-start  w-full md:w-[80%] flex-grow mt-5 overflow-auto">
           {requests?.length > 0 ? (
             requests.map((request) => (
-              <NotificationCard key={request._id} request={request} handleGetFriendRequest={handleGetFriendRequest} />
+              <NotificationCard
+                key={request._id}
+                request={request}
+                handleGetFriendRequest={handleGetFriendRequest}
+              />
             ))
           ) : (
             <div className="not-found w-full h-full flex items-start justify-center">

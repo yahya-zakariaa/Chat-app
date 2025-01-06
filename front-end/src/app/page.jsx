@@ -1,67 +1,29 @@
 "use client";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useToggleComponents } from "@/store/useToggleComponents.js";
-import { useAuthStore } from "@/store/useAuthStore.js";
-import { useUserStore } from "@/store/useUserStore.js";
 import DefaultRightSideContent from "@/components/DefaultRightSideContent";
 import DescoverFriends from "@/components/DescoverFriends";
 import Notifications from "@/components/Notifications";
+import UserProfile from "@/components/UserProfile";
 import useWindowWidth from "@/hooks/useWindowWidth";
 export default function Home() {
-  const { getFriends, friends, descoverResult, getFriendRequest } =
-    useUserStore();
-  const { user, checkAuth } = useAuthStore();
-  const { activeComponent, setActiveComponent } = useToggleComponents();
+  const { activeComponent, reset } = useToggleComponents();
   const windowWidth = useWindowWidth();
-  const router = useRouter();
   const components = {
     default: <DefaultRightSideContent />,
-    descoverFriends: <DescoverFriends />,
-    notifications: <Notifications />,
+    descoverFriends: (
+      <DescoverFriends reset={reset} windowWidth={windowWidth} />
+    ),
+    notifications: <Notifications reset={reset} windowWidth={windowWidth} />,
+    userProfile: <UserProfile reset={reset} windowWidth={windowWidth} />,
   };
   const [currentComponent, setCurrentComponent] = useState(
     components[activeComponent]
   );
 
-  const handelGetFriends = async () => {
-    try {
-      await getFriends();
-    } catch (error) {
-      console.log(error);
-    } finally {
-      console.log(friends);
-    }
-  };
-
-  const handleCheckAuth = async () => {
-    try {
-      await checkAuth();
-    } catch (error) {
-      router.push("/login");
-    }
-  };
-
-  const handleGetFriendRequests = async () => {
-    try {
-      const res = await getFriendRequest();
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  useEffect(() => {
-    handleCheckAuth();
-  }, [user?._id]);
-
   useEffect(() => {
     setCurrentComponent(components[activeComponent]);
   }, [activeComponent]);
-
-  useEffect(() => {
-    handelGetFriends();
-  }, [friends?.length]);
-
   return (
     <>
       <div className="md:w-[94.5%] w-full flex relative h-[88%] md:h-full">

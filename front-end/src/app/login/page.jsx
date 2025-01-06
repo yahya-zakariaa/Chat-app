@@ -14,10 +14,7 @@ export default function Login() {
     try {
       const res = await login(values?.email, values?.password);
       console.log(res);
-
-      if (res?.status === 200) {
-        return router.push("/");
-      }
+      return router.push("/");
     } catch (error) {
       console.log(error);
     }

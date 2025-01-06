@@ -3,7 +3,7 @@ import toast from "react-hot-toast";
 import { create } from "zustand";
 
 export const useUserStore = create((set) => ({
-  friends: null,
+  friends: [],
   friendsCount: 0,
   friendsRequestCount: 0,
   isGettingFriends: true,
@@ -18,10 +18,8 @@ export const useUserStore = create((set) => ({
     try {
       set({ isGettingFriends: false });
       const res = await axiosInstance.get("user/get-friends");
-      console.log(res);
-
-      set({ friends: res.data.data.friends });
-      set({ friendsCount: res.data.data.total });
+      set({ friends: res?.data?.data?.friends });
+      set({ friendsCount: res?.data?.data?.total });
     } catch (error) {
       console.log("error in get friends", error);
       return toast.error(

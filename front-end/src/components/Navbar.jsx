@@ -1,19 +1,27 @@
 import React from "react";
 import defaultAvatar from "../../public/default-avatar.png";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Navbar({ setActiveComponent, setIsToggled, user }) {
   return (
     <nav className=" w-[100%] md:px-5 px-3  rounded-xl mx-auto h-[10%] flex justify-between items-center bg-[#1a1a1a]">
       <div className="userProfile">
-        <Image
-          src={user?.avatar || defaultAvatar}
-          placeholder="empty"
-          className="rounded-full w-[40px] h-[40px] object-cover"
-          alt="profile"
-          width={50}
-          height={50}
-        />
+        <button
+          onClick={() => {
+            setIsToggled(true);
+            setActiveComponent("userProfile");
+          }}
+        >
+          <Image
+            src={user?.avatar || defaultAvatar}
+            placeholder="empty"
+            className="rounded-full aspect-square object-cover"
+            alt="profile"
+            width={45}
+            height={45}
+          />
+        </button>
       </div>
       <ul className="flex items-center gap-4">
         <li aria-label="Add new friend">

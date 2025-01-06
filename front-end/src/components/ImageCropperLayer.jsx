@@ -1,6 +1,6 @@
 import { useAuthStore } from "@/store/useAuthStore";
 import useImageHandlerStore from "@/store/useImageHandlerStore";
-import React, { useRef, useState } from "react";
+import React, { useRef } from "react";
 import { Cropper } from "react-cropper";
 import toast from "react-hot-toast";
 
@@ -20,15 +20,45 @@ export default function ImageCropperLayer() {
     if (!cropperRef.current) {
       return toast.error("Please select an image first");
     }
+
     const cropperInstance = cropperRef.current?.cropper;
     if (!cropperInstance) {
-      return toast.error("something want worng - try again later");
+      return toast.error("Something went wrong - please try again later");
     }
+
     const croppedCanvas = cropperInstance.getCroppedCanvas();
-    setCroppedImage(croppedCanvas.toDataURL());
-    await updateUserPic({ avatar: croppedCanvas.toDataURL() });
-    setSelectedImage(null);
+
+    if (croppedCanvas) {
+      const compressedCanvas = document.createElement("canvas");
+      const ctx = compressedCanvas.getContext("2d");
+
+      const scaleFactor = 1;
+      compressedCanvas.width = croppedCanvas.width * scaleFactor;
+      compressedCanvas.height = croppedCanvas.height * scaleFactor;
+
+      ctx.drawImage(
+        croppedCanvas,
+        0,
+        0,
+        compressedCanvas.width,
+        compressedCanvas.height
+      );
+
+      const compressedBase64 = compressedCanvas.toDataURL("image/jpeg", 0.6);
+      setCroppedImage(compressedBase64);
+
+      try {
+        await updateUserPic({ avatar: compressedBase64 });
+        setSelectedImage(null);
+        setIsUpdatingAvatar(false);
+      } catch (error) {
+        toast.error("Failed to update profile picture. Please try again.");
+      }
+    } else {
+      toast.error("Failed to crop the image");
+    }
   };
+
   return (
     <>
       <div
@@ -38,7 +68,7 @@ export default function ImageCropperLayer() {
           setCroppedImage(null);
           setIsUpdatingAvatar(false);
         }}
-        className="absolute flex-col top-[0%] left-[0%]  flex justify-center items-center w-screen h-screen bg-black bg-opacity-60 z-[9999]"
+        className="absolute flex-col top-[0%] left-[0%]  flex justify-center items-center w-screen h-screen bg-black bg-opacity-60 z-[99999]"
       >
         <div
           onClick={(e) => {

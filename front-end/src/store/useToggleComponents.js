@@ -1,7 +1,9 @@
 import { create } from "zustand";
-import { is } from './../../.next/static/chunks/[root of the server]__577f55._';
 
 export const useToggleComponents = create((set) => ({
   activeComponent: "default",
+  isToggled: false,
+  setIsToggled: (value) => set({ isToggled: value }),
   setActiveComponent: (component) => set({ activeComponent: component }),
+  reset: () => set({ activeComponent: "default", isToggled: false }),
 }));

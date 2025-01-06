@@ -5,7 +5,7 @@ import UserCard from "./UserCard";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 
-export default function DescoverFriends({ setIsToggled }) {
+export default function DescoverFriends({ setIsToggled, windowWidth, reset }) {
   const {
     descoverUsers,
     isDescoveringNewFriends,
@@ -49,7 +49,7 @@ export default function DescoverFriends({ setIsToggled }) {
       className="descover-friends md:w-full md:h-full md:rounded-none pb-4 rounded-lg md:relative absolute  md:translate-x-0 md:translate-y-0 translate-y-[-50%] md:left-0 md:top-0 top-[50%] left-[50%] translate-x-[-50%] w-[90%] h-[90%] lg:bg-transparent bg-[#0d0d0d] border-[.2px] md:border-none border-[#dddddd2d] pt-5 px-2 overflow-hidden flex flex-col"
     >
       <button
-        onClick={() => setIsToggled(false)}
+        onClick={() => (windowWidth >= 1024 ? reset() : setIsToggled(false))}
         className="absolute top-2 right-2 text-white lg:hidden"
       >
         <svg

@@ -8,24 +8,30 @@ export const useAuthStore = create((set) => ({
   isLoggingIn: false,
   isLoggingOut: false,
   isUpdatingProfile: false,
-  isCheckingAuth: true,
+  isCheckingAuth: false,
   isResetCodeSend: false,
   isResetCodeVerified: false,
+  setIsCheckingAuth: (value) => set({ isCheckingAuth: value }),
 
   // auth actions
   checkAuth: async () => {
     try {
+      set({ isCheckingAuth: true });
       const res = await axiosInstance.get("/auth/check-auth");
+      console.log(res);
+
       set({ user: res?.data?.data?.user });
     } catch (error) {
       set({ user: null });
+      console.log(error);
       toast.error(
-        error?.response.data.message || "Something want worng - Login again"
+        error?.response?.data?.message || "Something went wrong - Login again"
       );
     } finally {
       set({ isCheckingAuth: false });
     }
   },
+
   signUp: async (username, email, password) => {
     set({ isSigningUp: true });
     try {
@@ -34,134 +40,93 @@ export const useAuthStore = create((set) => ({
         email,
         password,
       });
-
+      console.log(res);
       set({ user: res?.data?.data?.user });
-      toast.success("Account has been created ");
+      toast.success("Account has been created");
       return res;
     } catch (error) {
       console.log(error);
-      if (error?.response?.data?.message.startsWith("Email already exists")) {
-        return toast.error("Email already exists");
-      }
-      toast.error(
-        error?.response.data.message
-          ? error.response.data.message
-          : error?.message.startsWith("Network Erorr")
-          ? "please check internet conection"
-          : "somitheng went worng"
-      );
+      toast.error(error?.response?.data?.message || "Something went wrong");
     } finally {
       set({ isSigningUp: false });
     }
   },
+
   login: async (email, password) => {
     set({ isLoggingIn: true });
     try {
-      const res = await axiosInstance.post("auth/login", {
-        email,
-        password,
-      });
-
+      const res = await axiosInstance.post("auth/login", { email, password });
+      console.log(res);
       set({ user: res?.data?.data?.user });
-      toast.success("welcome back");
+      toast.success("Welcome back");
       return res;
     } catch (error) {
       set({ user: null });
-      toast.error(
-        error?.response.data.message
-          ? error.response.data.message
-          : error?.message.startsWith("Network Erorr")
-          ? "please check internet conection"
-          : "somitheng went worng"
-      );
+      console.log(error);
+
+      toast.error(error?.response?.data?.message || "Something went wrong");
     } finally {
       set({ isLoggingIn: false });
-      set({ user: null });
     }
   },
+
   logout: async () => {
     set({ isLoggingOut: true });
     try {
       await axiosInstance.post("auth/logout");
+      set({ user: null });
       toast.success("Logged out");
     } catch (error) {
-      toast.error(
-        error?.response.data.message
-          ? error.response.data.message
-          : error?.message.startsWith("Network Erorr")
-          ? "please check internet conection"
-          : "somitheng went worng"
-      );
+      toast.error(error?.response?.data?.message || "Something went wrong");
     } finally {
       set({ isLoggingOut: false });
-      set({ user: null });
     }
   },
+
   sendVerificationCode: async (email) => {
     try {
       const res = await axiosInstance.post("auth/reset-code", { email });
       if (res.status === 200) {
-        toast.success("code send via email");
+        toast.success("Code sent via email");
         set({ isResetCodeSend: true });
       }
     } catch (error) {
+      toast.error(error?.response?.data?.message || "Something went wrong");
       set({ isResetCodeSend: false });
-      toast.error(
-        error?.response.data.message
-          ? error.response.data.message
-          : error?.message.startsWith("Network Erorr")
-          ? "please check internet conection"
-          : "somitheng went worng"
-      );
     }
   },
+
   verifiedResetCode: async (code) => {
     try {
-      const res = await axiosInstance.post("auth/verified-code", {
-        code,
-      });
-      if (res.status == 200) {
-        set({ isResetCodeVerified: true });
-        set({ isResetCodeSend: false });
-        toast.success("code verified successfully");
+      const res = await axiosInstance.post("auth/verified-code", { code });
+      if (res.status === 200) {
+        toast.success("Code verified successfully");
+        set({ isResetCodeVerified: true, isResetCodeSend: false });
         return res;
       }
     } catch (error) {
+      toast.error(error?.response?.data?.message || "Something went wrong");
       set({ isResetCodeVerified: false });
-      toast.error(
-        error?.response.data.message
-          ? error.response.data.message
-          : error?.message.startsWith("Network Erorr")
-          ? "please check internet conection"
-          : "somitheng went worng"
-      );
     }
   },
-  resetPassword: async (userId, password) => {
-    console.log(password, userId);
 
+  resetPassword: async (userId, password) => {
     try {
       const res = await axiosInstance.post("auth/reset-password", {
         userId,
         password,
       });
       if (res.status === 200) {
-        toast.success("password reseted successfully");
+        toast.success("Password reset successfully");
         set({ isResetCodeSend: false, isResetCodeVerified: false });
         return res;
       }
     } catch (error) {
-      toast.error(
-        error?.response.data.message
-          ? error.response.data.message
-          : error?.message.startsWith("Network Erorr")
-          ? "please check internet conection"
-          : "somitheng went worng"
-      );
+      toast.error(error?.response?.data?.message || "Something went wrong");
     }
   },
 
-  // user profile action
+  // user profile actions
   updateUserPic: async (pic) => {
     set({ isUpdatingProfile: true });
     try {
@@ -169,18 +134,12 @@ export const useAuthStore = create((set) => ({
       set({ user: res?.data?.data?.user });
       toast.success("Profile picture updated");
     } catch (error) {
-      toast.error(
-        error?.response.data.message
-          ? error.response.data.message
-          : error?.message.startsWith("Network Erorr")
-          ? "please check internet conection"
-          : "somitheng went worng"
-      );
-      return error;
+      toast.error(error?.response?.data?.message || "Something went wrong");
     } finally {
       set({ isUpdatingProfile: false });
     }
   },
+
   updateUsername: async (username) => {
     set({ isUpdatingProfile: true });
     try {
@@ -188,14 +147,7 @@ export const useAuthStore = create((set) => ({
       set({ user: res?.data?.data?.user });
       toast.success("Username updated");
     } catch (error) {
-      toast.error(
-        error?.response.data.message
-          ? error.response.data.message
-          : error?.message.startsWith("Network Erorr")
-          ? "please check internet conection"
-          : "somitheng went worng"
-      );
-      return error;
+      toast.error(error?.response?.data?.message || "Something went wrong");
     } finally {
       set({ isUpdatingProfile: false });
     }

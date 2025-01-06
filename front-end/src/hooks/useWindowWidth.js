@@ -1,17 +1,22 @@
-const { useState, useEffect } = require("react");
+import { useState, useEffect } from "react";
 
 export default function useWindowWidth() {
-  const [windowWidth, setWindowWidth] = useState(window?.innerWidth);
-    
+  const [windowWidth, setWindowWidth] = useState(0);
+  let timeoutId;
+
   useEffect(() => {
     const handleResize = () => {
-      setWindowWidth(window?.innerWidth);
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setWindowWidth(window.innerWidth);
+      }, 200);
     };
-    window?.addEventListener("resize", handleResize);
-    return () => {
-      window?.removeEventListener("resize", handleResize);
-    };
-  }, [window?.innerWidth]);
+
+    setWindowWidth(window.innerWidth);
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return windowWidth;
 }

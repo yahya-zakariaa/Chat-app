@@ -7,15 +7,18 @@ import defaultAvatar from "../../public/default-avatar.png";
 import toast from "react-hot-toast";
 import "cropperjs/dist/cropper.css";
 import useImageHandlerStore from "@/store/useImageHandlerStore";
+import { useToggleComponents } from "@/store/useToggleComponents";
 
 export default function DefaultRightSideContent() {
-  const { user, isUpdatingProfile, updateUserPic } = useAuthStore();
+  const { user, isUpdatingProfile } = useAuthStore();
   const { setSelectedImage, croppedImage, setIsUpdatingAvatar } =
     useImageHandlerStore();
+  const { setActiveComponent, setIsToggled } = useToggleComponents();
   const handelUpdateProfilePic = async (e) => {
     const file = e.target.files[0];
+
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
+    if (file.size > 5 * 1024 * 1024) {
       return toast.error("Image size should be less than 2MB");
     }
     if (
@@ -38,7 +41,7 @@ export default function DefaultRightSideContent() {
   };
 
   return (
-    <div className="default-content flex flex-col justify-between pt- items-center w-full h-full ">
+    <div className="default-content flex flex-col justify-between pt-16 items-center w-full h-full ">
       <div className="content flex-col justify-start flex items-center">
         <h1 className="  font-bold text-[26px] mb-10">Welcome to Nexus chat</h1>
 
@@ -47,6 +50,7 @@ export default function DefaultRightSideContent() {
             type="file"
             id={"main-section-upload-image"}
             onChange={handelUpdateProfilePic}
+            onClick={(e) => (e.target.value = null)}
             disabled={isUpdatingProfile}
             accept="image/*"
             className="w-[45px] cursor-pointer inline-flex z-[6] opacity-0 rounded-full  h-[45px] top-[63%]  border-[#050a19] border-[7px] right-[-1%] bg-[#0f225c] absolute text-[20px] font-bold "
@@ -71,15 +75,18 @@ export default function DefaultRightSideContent() {
             alt="user avatar"
             priority={true}
             blurDataURL={croppedImage || user?.avatar || defaultAvatar}
-            className="user-image  border-[#ffffffcb] border-2  w-[150px] h-[150px] object-cover  rounded-full overflow-hidden mb-4 mx-auto"
+            className="user-image  border-[#ffffffcb] border-2  aspect-square  object-cover  rounded-full overflow-hidden mb-4 mx-auto"
           />
         </div>
-        <Link
-          href="/profile"
-          className="font-bold text-[18px] px-5 py-1.5 mt-3 rounded-lg bg-[#010101] border-[#ffffff13] border text-white"
+        <button
+          onClick={() => {
+            setIsToggled(true);
+            setActiveComponent("userProfile");
+          }}
+          className="font-bold text-[18px] px-5 py-1.5 mt-3 rounded-lg bg-[#1c1c1c] border-[#ffffff2a] border text-white"
         >
           View Profile
-        </Link>
+        </button>
       </div>
       <footer className="py-3 flex flex-col gap-3 justify-center  items-center w-full">
         <div className="  flex justify-center gap-10 items-center w-full">

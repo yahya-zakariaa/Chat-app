@@ -3,9 +3,8 @@ import mongoose from "mongoose";
 const GlobalErrorHandler = (err, req, res, next) => {
   const statusCode = err.statusCode || 500;
   const status = err.status || "error";
+  console.log(err);
 
-  console.log(err, statusCode, status, err.name , err.code , err.message , err.stack); 
-  
   if (err.name === "CastError") {
     return res.status(400).json({
       status: "fail",
@@ -13,10 +12,12 @@ const GlobalErrorHandler = (err, req, res, next) => {
     });
   }
 
-  if (err instanceof mongoose.Error.ValidationError) {
+  if (err.code === 11000 || err.code === "E11000") {
+    const field = Object.keys(err.keyValue)[0];
+    const value = err.keyValue[field];
     return res.status(400).json({
       status: "fail",
-      message: err.message || "Client side error - Try again",
+      message: `${field} '${value}' is already in use.`,
     });
   }
 

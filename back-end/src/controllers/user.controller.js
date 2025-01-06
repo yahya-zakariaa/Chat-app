@@ -1,37 +1,45 @@
+import mongoose from "mongoose";
 import FriendRequest from "../models/friendRequest.modal.js";
 import User from "../models/user.model.js";
 import { isValidImage } from "../utils/ImageValidetor.js";
 import { createError } from "../utils/utils.js";
 import cloudinary from "./../lib/cloudinary.js";
 
-const getUserFrindes = async (req, res, next) => {
-  const userId = req.user._id;
+const getUserFriends = async (req, res, next) => {
+  const userId = req.user?._id;
   if (!userId) {
-    return createError(
-      "Something went wrong - Login again",
-      401,
-      "error",
-      next
-    );
+    return createError("Unauthorized - Login again", 401, "error", next);
   }
+
   try {
-    const userFriends = await User.findById(userId)
-      .populate("friends.id")
-      .exec();
+    const userFriends = await User.findById(userId).populate({
+      path: "friends._id",
+      select: "-password -__v -email -createdAt -updatedAt",
+      strictPopulate: false,
+    });
 
     if (!userFriends) {
-      return createError(
-        "Something went wrong - Try again",
-        500,
-        "error",
-        next
-      );
+      return createError("User not found - Try again", 404, "error", next);
     }
+
+    const friendsList =
+      userFriends?.friends?.map((friend) => ({
+        ...friend._id._doc,
+        friendshipDate: new Date(friend.friendshipDate).toLocaleDateString(
+          "en-EG",
+          {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }
+        ),
+      })) || [];
+
     return res.status(200).json({
       status: "success",
       data: {
-        friends: userFriends || [],
-        total: userFriends.length || 0,
+        friends: friendsList,
+        total: friendsList.length,
       },
     });
   } catch (error) {
@@ -43,6 +51,7 @@ const getUserFrindes = async (req, res, next) => {
     );
   }
 };
+
 const getFriendRequests = async (req, res, next) => {
   const userId = req.user._id;
   if (!userId) {
@@ -127,7 +136,7 @@ const sendFriendRequest = async (req, res, next) => {
         next
       );
     }
-    if (sender.friends.includes(id)) {
+    if (sender.friends?.includes(id)) {
       return createError("You are already friends with this user", 400, "fail");
     }
     const checkIsExist = await FriendRequest.findOne({
@@ -137,8 +146,8 @@ const sendFriendRequest = async (req, res, next) => {
     });
 
     if (checkIsExist) {
-      user.friends.push(sender._id);
-      sender.friends.push(user._id);
+      user.friends?.push(sender._id);
+      sender.friends?.push(user._id);
       await user.save();
       await sender.save();
       checkIsExist.status = "accepted";
@@ -227,7 +236,7 @@ const acceptFriendRequest = async (req, res, next) => {
       );
     }
     receiver.friends.push(friendRequest.senderId);
-    sender.friends.push(_id);
+    sender.friends.push(friendRequest.receviedId);
     await receiver.save();
     await sender.save();
     friendRequest.status = "accepted";
@@ -458,7 +467,7 @@ const updateProfileName = async (req, res, next) => {
   if (!username) {
     return res.status(400).json({
       status: "fail",
-      message: " client side error - Please provide a username",
+      message: "client side error - Please provide a username",
     });
   }
 
@@ -524,10 +533,11 @@ const discoverNewFriends = async (req, res, next) => {
   if (!_id) {
     return createError("Something went wrong - Login again", 401, "fail");
   }
+
   try {
     let users = await User.find({
       _id: { $ne: _id, $nin: req.user.friends },
-    }).select(["-password", "-__v", "-email"]);
+    }).select("-password -__v -email");
 
     const PendingRequests = await FriendRequest.find({
       $or: [{ senderId: _id }, { receviedId: _id }],
@@ -535,15 +545,15 @@ const discoverNewFriends = async (req, res, next) => {
     });
 
     users = users.map((user) => {
-      const isPending = PendingRequests.some((req) => {
-        return req.receviedId.toString() === user._id.toString();
-      });
-
-      const isReceivedRequest = PendingRequests.some((req) => {
-        return req.senderId.toString() === user._id.toString();
-      });
-
-      const isFriend = req.user.friends.includes(user._id.toString());
+      const isPending = PendingRequests.some(
+        (req) => req.receviedId.toString() === user._id.toString()
+      );
+      const isReceivedRequest = PendingRequests.some(
+        (req) => req.senderId.toString() === user._id.toString()
+      );
+      const isFriend = req.user.friends.some(
+        (id) => id._id.toString() === user._id
+      );
 
       return {
         ...user.toObject(),
@@ -552,9 +562,11 @@ const discoverNewFriends = async (req, res, next) => {
         isFriend,
       };
     });
-    if (!users) {
+
+    if (users.length === 0) {
       return res.status(204).json({ status: "success", data: { users: [] } });
     }
+
     return res.status(200).json({
       status: "success",
       data: { users },
@@ -568,8 +580,9 @@ const discoverNewFriends = async (req, res, next) => {
     );
   }
 };
+
 export {
-  getUserFrindes,
+  getUserFriends,
   getFriendRequests,
   sendFriendRequest,
   acceptFriendRequest,

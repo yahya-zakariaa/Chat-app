@@ -20,7 +20,7 @@ const resetFailedAttempts = (email) => {
   failedLoginAttempts[email] = null;
 };
 
-const register = async (req, res) => {
+const register = async (req, res, next) => {
   try {
     const { username, email, password } = req.body;
     if (!username || !email || !password) {
@@ -49,7 +49,7 @@ const register = async (req, res) => {
         user: {
           username: newUser.username,
           email: newUser.email,
-          avatar: avatar || "",
+          avatar: newUser.avatar || "",
           createdAt: newUser.createdAt,
         },
       },
@@ -57,7 +57,7 @@ const register = async (req, res) => {
     });
   } catch (error) {
     return createError(
-      error.message || "Something went wrong.",
+      error.message || "Something went wrong - Try again later.",
       500,
       "fail",
       next
@@ -146,12 +146,12 @@ const login = async (req, res, next) => {
   }
 };
 
-const logout = (req, res) => {
+const logout = (req, res, next) => {
   res.cookie("token", null, { httpOnly: true, expires: new Date(0) });
   res.status(200).json({ status: "success", message: "Logged out" });
 };
 
-const checkAuth = (req, res) => {
+const checkAuth = (req, res, next) => {
   if (!req.user) {
     return createError(
       "Your session has expired - Login again",
@@ -546,7 +546,7 @@ text-decoration: none
   }
 };
 
-const verifyResetCode = async (req, res) => {
+const verifyResetCode = async (req, res, next) => {
   const { code } = req.body;
 
   if (!code) {
@@ -588,7 +588,7 @@ const verifyResetCode = async (req, res) => {
   }
 };
 
-const resetPassword = async (req, res) => {
+const resetPassword = async (req, res, next) => {
   const { userId, password } = req.body;
   console.log(userId, password);
 

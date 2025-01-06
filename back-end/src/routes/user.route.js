@@ -3,7 +3,7 @@ import protectedRoute from "../middleware/auth.middleware.js";
 import {
   updateProfileAvatar,
   updateProfileName,
-  getUserFrindes,
+  getUserFriends,
   getFriendRequests,
   searchNewFriends,
   discoverNewFriends,
@@ -18,11 +18,19 @@ const router = express.Router();
 // user friendship
 router.get("/discover-new-friends", protectedRoute, discoverNewFriends);
 router.get("/get-friend-requests", protectedRoute, getFriendRequests);
-router.get("/get-friends", protectedRoute, getUserFrindes);
+router.get("/get-friends", protectedRoute, getUserFriends);
 router.post("/search-new-friends", protectedRoute, searchNewFriends);
 router.post("/send-friend-request", protectedRoute, sendFriendRequest);
-router.post("/accept-friend-request/:requestId", protectedRoute, acceptFriendRequest);
-router.post("/reject-friend-request/:requestId", protectedRoute, rejectFriendRequest);
+router.post(
+  "/accept-friend-request/:requestId",
+  protectedRoute,
+  acceptFriendRequest
+);
+router.post(
+  "/reject-friend-request/:requestId",
+  protectedRoute,
+  rejectFriendRequest
+);
 router.delete("/remove-friend/friendId", protectedRoute, removeFriend);
 router.delete(
   "/cancel-friend-request/:userId",

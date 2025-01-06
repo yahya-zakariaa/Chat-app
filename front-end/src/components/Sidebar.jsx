@@ -1,17 +1,54 @@
+import { useUserStore } from "@/store/useUserStore";
+import { useAuthStore } from "@/store/useAuthStore";
+import defaultAvatar from "../../public/default-avatar.png";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
-import toast from "react-hot-toast";
+import React, { useEffect, useState } from "react";
+import Image from "next/image";
 
-export default function Sidebar() {
-  const [toggleSettings, setToggleSettings] = useState(false);
+export default function Sidebar({ logout, reset }) {
   const router = useRouter();
+  const [toggleSettings, setToggleSettings] = useState(false);
+  const { getFriends, friends } = useUserStore();
+  const { user } = useAuthStore();
+  const handelGetFriends = async () => {
+    try {
+      await getFriends();
+    } catch (error) {
+      console.log(error);
+    } finally {
+      console.log(friends?.length);
+    }
+  };
+
+  useEffect(() => {
+    handelGetFriends();
+    console.log(friends?.length);
+  }, [user?._id, friends?.length]);
+
   return (
     <div className="sidebar rounded-xl overflow-hidden  flex flex-row md:flex-col md:py-3 justify-between items-center md:h-[100%] lg:w-[5%] md:w-[7%] w-[100%] left-[50%] translate-x-[-50%] md:translate-x-0 h-[12%] flex-shrink    shadow-3xl  bg-[#1a1a1a] md:backdrop-blur-0 backdrop-blur-md md:relative relative md:top-0 md:left-0 z-[999]">
-      <div className="userFriends md:mt-20"></div>
+      {friends.length > 0 && (
+        <ul className="userFriends md:mt-0 flex flex-col gap-2 items-center justify-start ">
+          {friends?.slice(0, 7)?.map((friend) => (
+            <li
+              key={friend?._id}
+              className=" px-2 md:rounded-md rounded-full  max-w-full min-h-[60px] justify-center flex items-center"
+            >
+              <Image
+                width={60}
+                height={60}
+                src={friend?.avatar || defaultAvatar}
+                alt="user"
+                className="w-[45px] h-[45px] rounded-full object-cover"
+              />
+            </li>
+          ))}
+        </ul>
+      )}
       <ul className="flex flex-row   md:flex-col justify-evenly md:justify-center items-center pb-3 pt-2 mb-[-5px] h-fit w-full gap-4 ">
         <li className="order-4 md:order-1 hover:bg-white px-2 md:rounded-md rounded-full hover:bg-opacity-10 min-h-[50px] md:min-h-[40px] md:w-[70%] w-[50px] justify-center flex items-center">
-          <Link href={"/"} className="">
+          <button onClick={() => reset()} className="">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="36"
@@ -23,7 +60,7 @@ export default function Sidebar() {
                 d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1"
               />
             </svg>
-          </Link>
+          </button>
         </li>
         <li className="order-3 md:order-2  hover:bg-white px-2 md:rounded-md rounded-full hover:bg-opacity-10 min-h-[50px] md:min-h-[40px] md:w-[70%] w-[50px] justify-center flex items-center">
           <Link href={"/"} className="">

@@ -1,41 +1,40 @@
 "use client";
 import React from "react";
-import defaultAvatar from "../../../public/default-avatar.png";
-import { useAuthStore } from "@/store/useAuthStore.js";
-import { useEffect, useState, useRef } from "react";
-import Link from "next/link";
-
+import defaultAvatar from "../../public/default-avatar.png";
+import { useState, useRef } from "react";
+import useImageHandlerStore from "@/store/useImageHandlerStore";
+import { useAuthStore } from "@/store/useAuthStore";
 import Image from "next/image";
-export default function profile() {
-  const UsernameInput = useRef();
-  const [selectedImage, setSelectedImage] = useState();
-  const [isUpdateUserInfo, setIsUpdateUserInfo] = useState();
-  const {
-    user,
-    checkAuth,
-    isCheckingAuth,
-    logout,
-    isLoggingOut,
-    updateUserPic,
-    isUpdatingProfile,
-    updateUsername,
-  } = useAuthStore();
-  const handelCheckAuth = async () => {
-    const res = await checkAuth();
-    if (res?.status == 401) {
-      router.push("/login");
-    }
-  };
 
-  const handleUpdateProfilePic = async (e) => {
+export default function UserProfile({ setIsToggled, windowWidth, reset }) {
+  const UsernameInput = useRef();
+  const [isUpdateUserInfo, setIsUpdateUserInfo] = useState(false);
+  const { setSelectedImage, croppedImage, setIsUpdatingAvatar } =
+    useImageHandlerStore();
+  const { user, isUpdatingProfile, updateUsername } = useAuthStore();
+
+  const handelUpdateProfilePic = async (e) => {
     const file = e.target.files[0];
+
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      return toast.error("Image size should be less than 2MB");
+    }
+    if (
+      file.type !== "image/jpeg" &&
+      file.type !== "image/png" &&
+      file.type !== "image/jpg"
+    ) {
+      return toast.error(
+        "Invalid file type - Please upload a valid image type"
+      );
+    }
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = async () => {
       const base64Image = reader.result;
+      setIsUpdatingAvatar(true);
       setSelectedImage(base64Image);
-      await updateUserPic({ avatar: base64Image });
     };
   };
 
@@ -57,15 +56,35 @@ export default function profile() {
     }
   };
 
-  useEffect(() => {
-    handelCheckAuth();
-  }, [isLoggingOut]);
-
   return (
-    <section className="bg-gray-50 dark:bg-gray-950 w-full overflow-auto md:w-[94.5%]  relative h-[88%] md:h-full">
-      <div className="flex flex-col items-center justify-start   px-6 py-8 mx-auto min-h-screen lg:py-0">
-        <div className="w-full bg-white rounded-lg md:mt-[100px] shadow dark:border  sm:max-w-md xl:p-0 dark:bg-gray-900 dark:border-gray-700 md:min-w-[600px]">
-          <h1 className="text-2xl mb-10 font-bold leading-tight tracking-wide mt-5 text-center text-gray-900 md:text-3xl dark:text-white ">
+    <section
+      onClick={(e) => e.stopPropagation()}
+      className=" md:w-full md:h-full md:rounded-none pb-4 rounded-lg md:relative absolute  md:translate-x-0 md:translate-y-0 translate-y-[-50%] md:left-0 md:top-0 top-[50%] left-[50%] translate-x-[-50%] w-[90%] h-[90%] lg:bg-transparent bg-[#0d0d0d] border-[.2px] md:border-none border-[#dddddd2d] pt-5 px-1 overflow-hidden "
+    >
+      <button
+        onClick={() => (windowWidth >= 1024 ? reset() : setIsToggled(false))}
+        className="absolute top-4 left-4 text-white "
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="35"
+          height="35"
+          viewBox="0 0 24 24"
+        >
+          <rect width="35" height="35" fill="none" />
+          <path
+            fill="none"
+            stroke="#fff"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M5 12h14M5 12l6 6m-6-6l6-6"
+          />
+        </svg>
+      </button>
+      <div className="flex w-full flex-col items-center justify-start   px-6 py-8 mx-auto  lg:py-0">
+        <div className="w-full rounded-lg shadow   sm:max-w-md xl:p-0  md:min-w-[600px]">
+          <h1 className="text-2xl mb-10 font-bold leading-tight tracking-wide mt-5 text-center  md:text-3xl dark:text-white ">
             Profile
           </h1>
           <div className="content flex-col justify-start flex items-center">
@@ -73,12 +92,13 @@ export default function profile() {
               <input
                 type="file"
                 id={"main-section-upload-image"}
-                onChange={handleUpdateProfilePic}
+                onChange={handelUpdateProfilePic}
+                onClick={(e) => (e.target.value = null)}
                 disabled={isUpdatingProfile}
                 accept="image/*"
                 className="w-[45px] cursor-pointer inline-flex z-[6] opacity-0 rounded-full  h-[45px] top-[63%]  border-[#050a19] border-[7px] right-[-1%] bg-[#0f225c] absolute text-[20px] font-bold "
               />
-              <div className=" absolute cursor-pointer  z-[1] w-fit h-fit top-[63%] right-0 bg-blue-950 px-3 py-3 flex justify-center items-center rounded-full">
+              <div className=" absolute cursor-pointer  z-[1] w-fit h-fit top-[64%] right-0 bg-blue-950 px-3 py-3 flex justify-center items-center rounded-full">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="20"
@@ -94,16 +114,16 @@ export default function profile() {
               <Image
                 width={150}
                 height={150}
-                src={selectedImage || user?.avatar || defaultAvatar}
+                src={croppedImage || user?.avatar || defaultAvatar}
                 alt="user avatar"
-                blurDataURL={selectedImage || user?.avatar || defaultAvatar}
+                blurDataURL={croppedImage || user?.avatar || defaultAvatar}
                 className="user-image w-[150px] h-[150px]  rounded-full mb-4 mx-auto"
               />
             </div>
-            <span className="text-gray-400 text-[14px] tracking-wide ">
+            <span className="text-[#ccc] text-[14px] tracking-wide ">
               click the camera icon to update your photo
             </span>
-            <div className="inputs w-[90%] flex flex-col gap-10 justify-center items-start my-10">
+            <div className="inputs w-[90%] flex flex-col gap-10 justify-center items-start my-6 ">
               <div className="input-container flex flex-col w-full justify-center items-start relative">
                 <label
                   htmlFor="username"
@@ -131,12 +151,12 @@ export default function profile() {
                 </label>
                 <input
                   ref={UsernameInput}
-                  disabled={isUpdateUserInfo || isCheckingAuth}
+                  disabled={isUpdateUserInfo}
                   id="username"
                   type="text"
                   onBlur={handleUpdateProfileName}
                   placeholder={user?.username}
-                  className="bg-[#090c1c] px-3 rounded-lg py-3 w-full border border-gray-500"
+                  className="bg-[#1d1d1d] px-3 placeholder:text-[#ccc] text-[#ccc] rounded-lg py-3 w-full border border-gray-500"
                 />
                 <span
                   className={
@@ -218,7 +238,7 @@ export default function profile() {
                   id="userEmail"
                   type="text"
                   placeholder={user?.email}
-                  className="bg-[#090c1c] px-3 rounded-lg py-3 w-full border border-gray-500"
+                  className="bg-[#1d1d1d] px-3 rounded-lg py-3 w-full border border-gray-500"
                 />
               </div>
             </div>
