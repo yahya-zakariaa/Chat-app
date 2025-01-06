@@ -27,9 +27,9 @@ export default function Sidebar({ logout, reset }) {
   }, [user?._id, friends?.length]);
 
   return (
-    <div className="sidebar rounded-xl overflow-hidden  flex flex-row md:flex-col md:py-3 justify-between items-center md:h-[100%] lg:w-[5%] md:w-[7%] w-[100%] left-[50%] translate-x-[-50%] md:translate-x-0 h-[12%] flex-shrink    shadow-3xl  bg-[#1a1a1a] md:backdrop-blur-0 backdrop-blur-md md:relative relative md:top-0 md:left-0 z-[999]">
+    <div className="sidebar rounded-xl overflow-hidden  flex flex-row md:flex-col md:py-3 justify-between items-center md:h-[100%] lg:w-[5%] md:w-[7%] w-[100%] left-[50%] translate-x-[-50%] md:translate-x-0 h-[12%] flex-shrink    shadow-3xl  bg-[#1a1a1a] md:backdrop-blur-0 backdrop-blur-md  relative md:top-0 md:left-0 z-[999]">
       {friends.length > 0 && (
-        <ul className="userFriends md:mt-0 flex flex-col gap-2 items-center justify-start ">
+        <ul className="userFriends md:flex hidden md:mt-0  flex-col gap-2 items-center justify-start ">
           {friends?.slice(0, 7)?.map((friend) => (
             <li
               key={friend?._id}
@@ -40,7 +40,7 @@ export default function Sidebar({ logout, reset }) {
                 height={60}
                 src={friend?.avatar || defaultAvatar}
                 alt="user"
-                className="w-[45px] h-[45px] rounded-full object-cover"
+                className="w-[45px] h-[45px] min-w-[45px] min-h-[45px] rounded-full object-cover"
               />
             </li>
           ))}

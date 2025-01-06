@@ -89,7 +89,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} flex flex-col relative justify-start gap-2 md:justify-between p-2 max-h-[100vh] h-screen overflow-hidden bg-[#000]`}
+        className={`${geistSans.variable} ${geistMono.variable} flex flex-col relative justify-between gap-2 md:justify-between p-2 max-h-[100vh] h-screen overflow-hidden bg-[#000]`}
       >
         <Toaster position="top-center" containerStyle={{ zIndex: 99999999 }} />
         {isUpdatingAvatar && <ImageCropperLayer />}
@@ -111,7 +111,7 @@ export default function RootLayout({ children }) {
             {currentComponent}
           </div>
         )}
-        <main className="flex flex-grow md:flex-row flex-col-reverse gap-2 justify-between items-start md:items-end w-full h-[88%]">
+        <main className="flex flex-grow md:flex-row flex-col-reverse gap-2 justify-between items-center md:items-center w-full ">
           {protectedRoute.includes(pathname) && (
             <Sidebar logout={logout} reset={reset} />
           )}
