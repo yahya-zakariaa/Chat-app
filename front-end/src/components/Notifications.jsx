@@ -4,22 +4,12 @@ import { useEffect } from "react";
 import NotificationCard from "./NotificationCard";
 
 export default function Notifications({ setIsToggled, windowWidth, reset }) {
-  const { getFriendRequest } = useUserStore();
+  const { getFriendRequest, friendRequests } = useUserStore();
   const [requests, setRequests] = useState([]);
 
-  const handleGetFriendRequest = async () => {
-    try {
-      const res = await getFriendRequest();
-      setRequests(res?.data?.data.requests);
-      console.log(res);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
   useEffect(() => {
-    handleGetFriendRequest();
-  }, []);
+    getFriendRequest();
+  }, [getFriendRequest]);
   return (
     <div
       onClick={(e) => e.stopPropagation()}
@@ -72,7 +62,9 @@ export default function Notifications({ setIsToggled, windowWidth, reset }) {
                 />
               </svg>
             </button>
-            <h2 className="text-white text-[24px] md:text-2xl font-semibold">Notifications</h2>
+            <h2 className="text-white text-[24px] md:text-2xl font-semibold">
+              Notifications
+            </h2>
           </div>
           <div className="filtration flex items-center justify-between w-full">
             <ul className="flex items-center md:gap-4 w-full md:justify-start justify-around">
@@ -89,12 +81,12 @@ export default function Notifications({ setIsToggled, windowWidth, reset }) {
           </div>
         </div>
         <div className="notifications-messages flex flex-col justify-start items-start  w-full md:w-[80%] flex-grow mt-5 overflow-auto">
-          {requests?.length > 0 ? (
-            requests.map((request) => (
+          {friendRequests?.length > 0 ? (
+            friendRequests.map((request) => (
               <NotificationCard
                 key={request._id}
                 request={request}
-                handleGetFriendRequest={handleGetFriendRequest}
+                handleGetFriendRequest={getFriendRequest}
               />
             ))
           ) : (

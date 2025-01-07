@@ -10,25 +10,14 @@ export default function Sidebar({ logout, reset }) {
   const router = useRouter();
   const [toggleSettings, setToggleSettings] = useState(false);
   const { getFriends, friends } = useUserStore();
-  const { user } = useAuthStore();
-  const handelGetFriends = async () => {
-    try {
-      await getFriends();
-    } catch (error) {
-      console.log(error);
-    } finally {
-      console.log(friends?.length);
-    }
-  };
 
   useEffect(() => {
-    handelGetFriends();
-    console.log(friends?.length);
-  }, [user?._id, friends?.length]);
+    getFriends();
+  }, [getFriends]);
 
   return (
     <div className="sidebar rounded-xl overflow-hidden  flex flex-row md:flex-col md:py-3 justify-between items-center md:h-[100%] lg:w-[5%] md:w-[7%] w-[100%] left-[50%] translate-x-[-50%] md:translate-x-0 md:min-h-full min-h-[11%] flex-shrink    shadow-3xl  bg-[#1a1a1a] md:backdrop-blur-0 backdrop-blur-md  relative md:top-0 md:left-0 z-[999]">
-      {friends.length > 0 && (
+      {friends?.length > 0 && (
         <ul className="userFriends md:flex hidden md:mt-0  flex-col gap-2 items-center justify-start ">
           {friends?.slice(0, 7)?.map((friend) => (
             <li
@@ -155,9 +144,9 @@ export default function Sidebar({ logout, reset }) {
         </li>
         <li className="order-1 md:order-4  px-2 md:rounded-md rounded-full hover:bg-opacity-10 min-h-[50px] md:min-h-[40px] md:w-[70%] w-[50px] justify-center flex items-center ">
           <button
-            onClick={async () => {
-              await new Promise(() => router.push("/login"));
-              await logout();
+            onClick={ () => {
+               logout();
+              router.push("/login");
             }}
           >
             <svg

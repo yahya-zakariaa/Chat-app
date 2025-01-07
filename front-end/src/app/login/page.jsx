@@ -13,18 +13,17 @@ export default function Login() {
   const handleSubmit = async (values) => {
     try {
       const res = await login(values?.email, values?.password);
-      console.log(res);
-      return router.push("/");
+      if (res?.status === 200) {
+        return router.push("/");
+      }
+      return;
     } catch (error) {
       console.log(error);
     }
   };
 
   const validationSchema = yup.object().shape({
-    email: yup
-      .string()
-      .matches(/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/, "Invalid email")
-      .required("Email is required"),
+    email: yup.string().required("Email or Username is required"),
     password: yup.string().required("Password is required"),
   });
   const Formik = useFormik({
@@ -56,7 +55,7 @@ export default function Login() {
                   Your email
                 </label>
                 <input
-                  type="email"
+                  type="text"
                   value={Formik.values.email}
                   onChange={Formik.handleChange}
                   onBlur={Formik.handleBlur}

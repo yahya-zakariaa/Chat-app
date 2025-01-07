@@ -53,7 +53,6 @@ export default function RootLayout({ children }) {
   } = useToggleComponents();
   const { isUpdatingAvatar } = useImageHandlerStore();
   const windowWidth = useWindowWidth();
-  const router = useRouter();
   const pathname = usePathname();
   const components = {
     descoverFriends: <DescoverFriends setIsToggled={setIsToggled} />,
@@ -64,27 +63,13 @@ export default function RootLayout({ children }) {
     components[activeComponent] || null
   );
 
-  const handleCheckAuth = async () => {
-    try {
-      await checkAuth();
-    } catch (error) {
-      console.log(error);
-      if (unProtectedRoute.includes(pathname))
-        return toast.error("Session expired - Login again");
-      router.push("/login");
-      toast.error("Session expired - Login again");
-    } finally {
-      console.log(user);
-    }
-  };
-
   useEffect(() => {
     setCurrentComponent(components[activeComponent]);
   }, [activeComponent]);
 
   useEffect(() => {
-    handleCheckAuth();
-  }, [user?._id]);
+    checkAuth();
+  }, [checkAuth]);
 
   return (
     <html lang="en">
@@ -92,10 +77,10 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} flex flex-col relative justify-between gap-2 md:justify-between p-2 max-h-[100vh] h-screen overflow-hidden bg-[#000]`}
       >
         <Toaster position="top-center" containerStyle={{ zIndex: 99999999 }} />
-        {isUpdatingAvatar && <ImageCropperLayer />}
         {(isCheckingAuth && !user) || isLoggingOut ? (
           <LoadingOverlay message="Loading.." />
         ) : null}
+        {isUpdatingAvatar && <ImageCropperLayer />}
         {protectedRoute.includes(pathname) && (
           <Navbar
             setIsToggled={setIsToggled}

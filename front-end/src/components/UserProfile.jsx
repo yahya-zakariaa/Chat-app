@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import defaultAvatar from "../../public/default-avatar.png";
 import { useState, useRef } from "react";
 import useImageHandlerStore from "@/store/useImageHandlerStore";
@@ -11,7 +11,7 @@ export default function UserProfile({ setIsToggled, windowWidth, reset }) {
   const [isUpdateUserInfo, setIsUpdateUserInfo] = useState(false);
   const { setSelectedImage, croppedImage, setIsUpdatingAvatar } =
     useImageHandlerStore();
-  const { user, isUpdatingProfile, updateUsername } = useAuthStore();
+  const { user, isUpdatingProfile, updateUsername, checkAuth } = useAuthStore();
 
   const handelUpdateProfilePic = async (e) => {
     const file = e.target.files[0];
@@ -56,14 +56,19 @@ export default function UserProfile({ setIsToggled, windowWidth, reset }) {
     }
   };
 
+  useEffect(() => {
+    checkAuth();
+    console.log(user);
+  }, [checkAuth]);
+
   return (
     <section
       onClick={(e) => e.stopPropagation()}
-      className=" md:w-full md:h-full md:rounded-none pb-4 rounded-lg md:relative absolute  md:translate-x-0 md:translate-y-0 translate-y-[-50%] md:left-0 md:top-0 top-[50%] left-[50%] translate-x-[-50%] w-[90%] h-[90%] lg:bg-transparent bg-[#0d0d0d] border-[.2px] md:border-none border-[#dddddd2d] pt-5 px-1 overflow-hidden "
+      className=" md:w-full md:h-full md:rounded-none pb-4 rounded-lg md:relative absolute  md:translate-x-0 md:translate-y-0 translate-y-[-50%] md:left-0 md:top-0 top-[50%] left-[50%] translate-x-[-50%] w-[90%] h-[90%] lg:bg-transparent bg-[#0d0d0d] border-[.2px] md:border-none border-[#dddddd2d] pt-4 md:pt-5 px-1 overflow-y-auto md:overflow-hidden "
     >
       <button
         onClick={() => (windowWidth >= 1024 ? reset() : setIsToggled(false))}
-        className="absolute top-4 left-4 text-white "
+        className="absolute top-3 left-4 text-white "
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -98,11 +103,11 @@ export default function UserProfile({ setIsToggled, windowWidth, reset }) {
                 accept="image/*"
                 className="w-[45px] cursor-pointer inline-flex z-[6] opacity-0 rounded-full  h-[45px] top-[63%]  border-[#050a19] border-[7px] right-[-1%] bg-[#0f225c] absolute text-[20px] font-bold "
               />
-              <div className=" absolute cursor-pointer  z-[1] w-fit h-fit top-[64%] right-0 bg-blue-950 px-3 py-3 flex justify-center items-center rounded-full">
+              <div className=" absolute cursor-pointer  z-[1] w-fit h-fit top-[64%] right-0 bg-blue-950 p-2.5 flex justify-center items-center rounded-full">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
+                  width="17"
+                  height="17"
                   viewBox="0 0 56 56"
                 >
                   <path
@@ -117,10 +122,10 @@ export default function UserProfile({ setIsToggled, windowWidth, reset }) {
                 src={croppedImage || user?.avatar || defaultAvatar}
                 alt="user avatar"
                 blurDataURL={croppedImage || user?.avatar || defaultAvatar}
-                className="user-image w-[150px] h-[150px]  rounded-full mb-4 mx-auto"
+                className="user-image w-[120px] h-[120px] md:w-[150px] md:h-[150px]  rounded-full mb-4 mx-auto"
               />
             </div>
-            <span className="text-[#ccc] text-[14px] tracking-wide ">
+            <span className="text-[#ccc] text-[12px] md:text-[14px] tracking-wide ">
               click the camera icon to update your photo
             </span>
             <div className="inputs w-[90%] flex flex-col gap-10 justify-center items-start my-6 ">

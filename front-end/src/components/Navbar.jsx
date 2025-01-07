@@ -35,8 +35,6 @@ export default function Navbar({ setActiveComponent, setIsToggled, user }) {
               xmlns="http://www.w3.org/2000/svg"
               width="28"
               height="28"
-              minWidth="24"
-              minHeight="24"
               viewBox="0 0 24 24"
             >
               <rect width="28" height="28" fill="none" />

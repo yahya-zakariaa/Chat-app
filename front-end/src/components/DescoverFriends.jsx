@@ -11,38 +11,28 @@ export default function DescoverFriends({ setIsToggled, windowWidth, reset }) {
     isDescoveringNewFriends,
     searchNewFriends,
     isGettingSearchResult,
+    descoveredUsers,
   } = useUserStore();
-  const [users, setUsers] = useState([]);
-  const handleDescoverUsers = async () => {
-    try {
-      const res = await descoverUsers();
-      setUsers(res?.data?.data.users);
-      console.log(res);
-    } catch (error) {
-      console.log(error);
-    }
-  };
 
   const handleSearch = useDebounce(async (e) => {
     const query = e.target.value.trim();
 
     if (!query || /^[a-zA-Z0-9 ]$/.test(query)) {
-      if (users.length == 0 || query.length == 0) {
-        return handleDescoverUsers();
+      if (descoveredUsers.length == 0 || query.length == 0) {
+        return descoverUsers();
       }
       return;
     }
 
     try {
-      const res = await searchNewFriends(query);
-      setUsers(res?.data?.data?.users);
+      await searchNewFriends(query);
     } catch (error) {
       console.error("Error fetching users:", error);
     }
   }, 500);
   useEffect(() => {
-    handleDescoverUsers();
-  }, []);
+    descoverUsers();
+  }, [descoverUsers]);
   return (
     <div
       onClick={(e) => e.stopPropagation()}
@@ -81,7 +71,7 @@ export default function DescoverFriends({ setIsToggled, windowWidth, reset }) {
         />
       </div>
       <div className="users-container mt-7  relative w-full flex-grow px-2   overflow-auto">
-        {users?.length > 6 && (
+        {descoveredUsers?.length > 6 && (
           <>
             <div className="shadow sticky top-[-5px] left-0 w-full h-8 bg-gradient-to-b  from-[#0d0d0d] to-transparent from-[30%]"></div>
             <div className="shadow fixed bottom-[-5px] left-0 w-full h-8 bg-gradient-to-b  to-[#0d0d0d] from-transparent to-[30%] "></div>
@@ -89,8 +79,10 @@ export default function DescoverFriends({ setIsToggled, windowWidth, reset }) {
         )}
         <div className="users   md:flex-row flex flex-col md:flex-wrap md:gap-y-5  gap-y-4 md:justify-between h-auto ">
           {!isDescoveringNewFriends && !isGettingSearchResult ? (
-            users?.length > 0 ? (
-              users.map((user) => <UserCard key={user._id} user={user} />)
+            descoveredUsers?.length > 0 ? (
+              descoveredUsers.map((user) => (
+                <UserCard key={user._id} user={user} />
+              ))
             ) : (
               <div className="w-full h-fit  flex justify-center items-start mt-20">
                 <h2 className="text-[20px] font-bold">No users found</h2>

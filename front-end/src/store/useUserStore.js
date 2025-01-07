@@ -4,6 +4,8 @@ import { create } from "zustand";
 
 export const useUserStore = create((set) => ({
   friends: [],
+  friendRequests: [],
+  descoveredUsers: [],
   friendsCount: 0,
   friendsRequestCount: 0,
   isGettingFriends: true,
@@ -33,8 +35,8 @@ export const useUserStore = create((set) => ({
     try {
       set({ isGettingFriendRequest: true });
       const res = await axiosInstance.get("user/get-friend-requests");
-      set({ friendsRequestCount: res.data.data.total });
-      return res;
+      set({ friendRequests: res?.data?.data?.requests });
+      set({ friendsRequestCount: res?.data?.data?.total });
     } catch (error) {
       console.log("error in get friend request", error);
       return toast.error(
@@ -48,7 +50,7 @@ export const useUserStore = create((set) => ({
     try {
       set({ isDescoveringNewFriends: true });
       const res = await axiosInstance.get("user/discover-new-friends");
-      return res;
+      set({ descoveredUsers: res?.data?.data?.users });
     } catch (error) {
       console.log("error in descover new friends", error);
       return toast.error(
@@ -64,7 +66,7 @@ export const useUserStore = create((set) => ({
       const res = await axiosInstance.post("user/search-new-friends", {
         username,
       });
-      return res;
+      set({ descoveredUsers: res?.data?.data?.users });
     } catch (error) {
       console.log("error in descover new friends", error);
       return toast.error("something went wrong");

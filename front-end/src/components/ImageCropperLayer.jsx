@@ -68,7 +68,7 @@ export default function ImageCropperLayer() {
           setCroppedImage(null);
           setIsUpdatingAvatar(false);
         }}
-        className="absolute flex-col top-[0%] left-[0%]  flex justify-center items-center w-screen h-screen bg-black bg-opacity-60 z-[99999]"
+        className="absolute flex-col top-[0%] left-[0%]  flex justify-center items-center w-screen h-screen bg-black bg-opacity-80 z-[99999]"
       >
         <div
           onClick={(e) => {
@@ -87,13 +87,16 @@ export default function ImageCropperLayer() {
             X
           </button>
           {selectedImage && (
-            <div className=" ">
+            <div className=" bg-white w-[90%] max-w-[300px] h-[300px] flex items-center justify-center ">
               <Cropper
                 src={selectedImage}
                 style={{
-                  height: "400px",
-                  width: "400px",
+                  height: "100%",
+                  width: "100%",
                   backgroundColor: "black",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
                   position: "",
                 }}
                 initialAspectRatio={1}
