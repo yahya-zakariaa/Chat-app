@@ -11,7 +11,7 @@ export default function UserProfile({ setIsToggled, windowWidth, reset }) {
   const [isUpdateUserInfo, setIsUpdateUserInfo] = useState(false);
   const { setSelectedImage, croppedImage, setIsUpdatingAvatar } =
     useImageHandlerStore();
-  const { user, isUpdatingProfile, updateUsername, checkAuth } = useAuthStore();
+  const { user, isUpdatingProfile, updateUsername } = useAuthStore();
 
   const handelUpdateProfilePic = async (e) => {
     const file = e.target.files[0];
@@ -55,11 +55,6 @@ export default function UserProfile({ setIsToggled, windowWidth, reset }) {
       e.target.value = "";
     }
   };
-
-  useEffect(() => {
-    checkAuth();
-    console.log(user);
-  }, [checkAuth]);
 
   return (
     <section

@@ -2,7 +2,7 @@ import { axiosInstance } from "@/lib/axios.js";
 import toast from "react-hot-toast";
 import { create } from "zustand";
 
-export const useUserStore = create((set) => ({
+export const useUserStore = create((set, get) => ({
   friends: [],
   friendRequests: [],
   descoveredUsers: [],
@@ -15,11 +15,16 @@ export const useUserStore = create((set) => ({
   isRejectingFriendRequest: false,
   isRemoveingFriend: false,
   isDescoveringNewFriends: false,
-
+  setFriendRequests: (requests) =>
+    set({
+      friendRequests: requests,
+    }),
   getFriends: async () => {
     try {
-      set({ isGettingFriends: false });
+      set({ isGettingFriends: true });
       const res = await axiosInstance.get("user/get-friends");
+      console.log(res);
+
       set({ friends: res?.data?.data?.friends });
       set({ friendsCount: res?.data?.data?.total });
     } catch (error) {
@@ -35,6 +40,7 @@ export const useUserStore = create((set) => ({
     try {
       set({ isGettingFriendRequest: true });
       const res = await axiosInstance.get("user/get-friend-requests");
+      console.log(res);
       set({ friendRequests: res?.data?.data?.requests });
       set({ friendsRequestCount: res?.data?.data?.total });
     } catch (error) {
@@ -50,6 +56,8 @@ export const useUserStore = create((set) => ({
     try {
       set({ isDescoveringNewFriends: true });
       const res = await axiosInstance.get("user/discover-new-friends");
+      console.log(res);
+
       set({ descoveredUsers: res?.data?.data?.users });
     } catch (error) {
       console.log("error in descover new friends", error);
@@ -77,7 +85,7 @@ export const useUserStore = create((set) => ({
 
   addFriend: async (friendId) => {
     try {
-      const res = await axiosInstance.post("user/send-friend-request", {
+      await axiosInstance.post("user/send-friend-request", {
         id: friendId,
       });
     } catch (error) {
@@ -88,28 +96,44 @@ export const useUserStore = create((set) => ({
 
   cancelFriendRequest: async (userId) => {
     try {
-      const res = await axiosInstance.delete(
-        `user/cancel-friend-request/${userId}`
-      );
+      await axiosInstance.delete(`user/cancel-friend-request/${userId}`);
     } catch (error) {
       console.log(error);
     }
   },
 
   acceptFriendRequest: async (requestId) => {
+    const { friendRequests } = get();
+    set({
+      friendRequests: friendRequests.filter(
+        (request) => request._id !== requestId
+      ),
+    });
     try {
-      const res = await axiosInstance.post(
-        `user/accept-friend-request/${requestId}`
-      );
+      await axiosInstance.post(`user/accept-friend-request/${requestId}`);
     } catch (error) {
       console.log(error);
     }
   },
   rejectFriendRequest: async (requestId) => {
+    const { friendRequests } = get();
+    set({
+      friendRequests: friendRequests.filter(
+        (request) => request._id !== requestId
+      ),
+    });
     try {
-      const res = await axiosInstance.post(
-        `user/reject-friend-request/${requestId}`
-      );
+      await axiosInstance.post(`user/reject-friend-request/${requestId}`);
+    } catch (error) {
+      console.log(error);
+    }
+  },
+  removeFriend: async (friendId) => {
+    const { friends } = get();
+    set({ friends: friends.filter((friend) => friend._id !== friendId) });
+    try {
+      await axiosInstance.delete(`user/remove-friend/${friendId}`);
+      toast.success("Friend removed.");
     } catch (error) {
       console.log(error);
     }

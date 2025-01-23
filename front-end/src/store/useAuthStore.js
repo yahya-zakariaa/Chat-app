@@ -1,37 +1,38 @@
 import { axiosInstance } from "@/lib/axios.js";
+import showToast from "@/hooks/useShowToast.js";
 import toast from "react-hot-toast";
+import { io } from "socket.io-client";
 import { create } from "zustand";
 
-export const useAuthStore = create((set) => ({
+export const useAuthStore = create((set, get) => ({
   user: null,
+  socket: null,
+  onlineUsers: new Set(),
+  isLoggedIn: false,
   isSigningUp: false,
   isLoggingIn: false,
   isLoggingOut: false,
   isUpdatingProfile: false,
-  isCheckingAuth: false,
+  isResettingPassword: false,
   isResetCodeSend: false,
   isResetCodeVerified: false,
+  setOnlineFriends: (users) =>
+    set({
+      onlineUsers: new Set(Array.isArray(users) ? users : []),
+    }),
   setIsCheckingAuth: (value) => set({ isCheckingAuth: value }),
 
-  // auth actions
   checkAuth: async () => {
+    set({ isCheckingAuth: true });
     try {
-      set({ isCheckingAuth: true });
       const res = await axiosInstance.get("/auth/check-auth");
-      console.log(res);
-
-      set({ user: res?.data?.data?.user });
+      set({ user: res?.data?.data?.user, isLoggedIn: true });
     } catch (error) {
-      set({ user: null });
-      console.log(error);
-      toast.error(
-        error?.response?.data?.message || "Something went wrong - Login again"
-      );
+      get().handleAuthError(error);
     } finally {
       set({ isCheckingAuth: false });
     }
   },
-
   signUp: async (username, email, password) => {
     set({ isSigningUp: true });
     try {
@@ -42,31 +43,32 @@ export const useAuthStore = create((set) => ({
       });
       console.log(res);
       set({ user: res?.data?.data?.user });
-      toast.success("Account has been created");
+      showToast("Account has been created");
       return res;
     } catch (error) {
       console.log(error);
-      toast.error(error?.response?.data?.message || "Something went wrong");
+      showToast(error, "error");
     } finally {
       set({ isSigningUp: false });
     }
   },
 
   login: async (email, password) => {
+    if (get().isLoggingIn || get().isLoggedIn) return;
+
     set({ isLoggingIn: true });
+    showToast("please wait..", "loading");
+
     try {
       const res = await axiosInstance.post("auth/login", { email, password });
-      console.log(res);
-      set({ user: res?.data?.data?.user });
-      toast.success("Welcome back");
-      return res;
+      set({ user: res.data?.data?.user, isLoggedIn: true });
+      get().initSocketConnection();
+      showToast("Welcome back");
     } catch (error) {
-      set({ user: null });
-      console.log(error);
-
-      toast.error(error?.response?.data?.message || "Something went wrong");
+      get().handleAuthError(error);
     } finally {
       set({ isLoggingIn: false });
+      toast.dismiss();
     }
   },
 
@@ -74,15 +76,88 @@ export const useAuthStore = create((set) => ({
     set({ isLoggingOut: true });
     try {
       await axiosInstance.post("auth/logout");
-      set({ user: null });
-      toast.success("Logged out");
+      get().cleanupSocket();
+      showToast("Logged out");
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Something went wrong");
+      showToast(error, "error");
     } finally {
-      set({ isLoggingOut: false });
+      set({
+        isLoggingOut: false,
+        user: null,
+        isLoggedIn: false,
+        onlineUsers: new Set(),
+      });
+    }
+  },
+  initSocketConnection: () => {
+    const { user, socket } = get();
+    if (!user?._id) return;
+    if (!socket || socket.disconnected || !socket.connected) {
+      const newSocket = io("http://localhost:3001", {
+        query: { userId: user._id },
+        reconnection: true,
+        reconnectionAttempts: 3,
+        reconnectionDelay: 5000,
+        autoConnect: true,
+      });
+
+      get().setupSocketListeners(newSocket);
+      set({ socket: newSocket });
+    } else if (socket.disconnected) {
+      socket.connect();
+    }
+  },
+  setupSocketListeners: (socket) => {
+    socket.on("connect", () => {
+      socket.emit("user-online");
+    });
+
+    socket.on("disconnect", (reason) => {
+      console.log("Disconnected from server:", reason);
+      get().updateOfflineStatus();
+    });
+
+    socket.on("connect_error", (error) => {
+      console.error("Socket connection error:", error);
+      toast.error("Failed to connect to the server.");
+    });
+
+    socket.on("get-online-users", ({ users }) => {
+      console.log("online friends:", users);
+      if (users?.length === 0 || !users || users === "undefined") return;
+      if (get().onlineUsers.size > 0) return;
+      set({ onlineUsers: new Set(users) });
+    });
+
+    socket.on("user-status-update", (user) => {
+      console.log("friend", user.userId, "is", user.status);
+      if (user.status === "online") {
+        if (get().onlineUsers.has(user.userId)) return;
+        get().setOnlineFriends([...Array.from(get().onlineUsers), user.userId]);
+      } else if (user.status === "offline") {
+        get().setOnlineFriends(
+          Array.from(get().onlineUsers).filter((id) => id !== user.userId)
+        );
+      }
+    });
+  },
+
+  cleanupSocket: () => {
+    const { socket } = get();
+    if (socket) {
+      socket.off();
+      socket.disconnect();
+      set({ socket: null });
     }
   },
 
+  handleAuthError: (error) => {
+    console.log(error);
+    const message = error.response?.data?.message || "Something went wrong";
+    set({ user: null, isLoggedIn: false });
+    get().cleanupSocket();
+    showToast(message, "error");
+  },
   sendVerificationCode: async (email) => {
     try {
       const res = await axiosInstance.post("auth/reset-code", { email });

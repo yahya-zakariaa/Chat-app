@@ -51,7 +51,31 @@ body {
     opacity: 0;
   }
 }
+.skeleton-loader {
+  background-color: #dcdcdc60;
+  position: relative;
+  overflow: hidden;
+}
 
+.skeleton-loader::after {
+  content: "";
+  position: absolute;
+  background-color: #ffffff41;
+  filter: blur(6px);
+  top: 0;
+  left: 0;
+  width: 20%;
+  height: 100%;
+  animation: animloader .8s linear infinite;
+}
+@keyframes animloader {
+  0% {
+    left: 0;
+  }
+  100% {
+    left: 100%;
+  }
+}
 .descover-loader,
 .descover-loader:before,
 .descover-loader:after {

@@ -2,20 +2,23 @@
 import { useEffect, useState } from "react";
 import { useToggleComponents } from "@/store/useToggleComponents.js";
 import DefaultRightSideContent from "@/components/DefaultRightSideContent";
-import DescoverFriends from "@/components/DescoverFriends";
-import Notifications from "@/components/Notifications";
-import UserProfile from "@/components/UserProfile";
 import useWindowWidth from "@/hooks/useWindowWidth";
+import dynamic from "next/dynamic";
+const DiscoverFriends = dynamic(() => import("@/components/DiscoverFriends"));
+const Notifications = dynamic(() => import("@/components/Notifications"));
+const UserProfile = dynamic(() => import("@/components/UserProfile"));
+const Friends = dynamic(() => import("@/components/Friends"));
 export default function Home() {
   const { activeComponent, reset } = useToggleComponents();
   const windowWidth = useWindowWidth();
   const components = {
     default: <DefaultRightSideContent />,
-    descoverFriends: (
-      <DescoverFriends reset={reset} windowWidth={windowWidth} />
+    discoverFriends: (
+      <DiscoverFriends reset={reset} windowWidth={windowWidth} />
     ),
     notifications: <Notifications reset={reset} windowWidth={windowWidth} />,
     userProfile: <UserProfile reset={reset} windowWidth={windowWidth} />,
+    friends: <Friends reset={reset} windowWidth={windowWidth} />,
   };
   const [currentComponent, setCurrentComponent] = useState(
     components[activeComponent]

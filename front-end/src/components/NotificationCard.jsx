@@ -3,15 +3,14 @@ import defaultAvatar from "../../public/default-avatar.png";
 import Image from "next/image";
 import React, { useCallback, useState } from "react";
 
-export default function NotificationCard({ request, handleGetFriendRequest }) {
+export default function NotificationCard({ request }) {
   const { acceptFriendRequest, rejectFriendRequest } = useUserStore();
   const [isAcceptLoading, setIsAcceptLoading] = useState(false);
   const [isRejectLoading, setIsRejectLoading] = useState(false);
   const handleAcceptFriendRequest = useCallback(async (requestId) => {
     setIsAcceptLoading((prev) => ({ ...prev, [requestId]: true }));
     try {
-      const res = await acceptFriendRequest(requestId);
-      handleGetFriendRequest();
+      await acceptFriendRequest(requestId);
     } catch (error) {
       console.log(error);
     } finally {
@@ -21,8 +20,7 @@ export default function NotificationCard({ request, handleGetFriendRequest }) {
   const handleRejectFriendRequest = useCallback(async (requestId) => {
     setIsRejectLoading((prev) => ({ ...prev, [requestId]: true }));
     try {
-      const res = await rejectFriendRequest(requestId);
-      handleGetFriendRequest();
+      await rejectFriendRequest(requestId);
     } catch (error) {
       console.log(error);
     } finally {
@@ -34,7 +32,7 @@ export default function NotificationCard({ request, handleGetFriendRequest }) {
     <div className="notification py-2 px-2 flex items-center gap-3 w-full bg-[#141414] border-[.2px] border-[#dddddd1a] p-2 rounded-lg">
       <div className="user-image">
         <Image
-          src={request.senderId.avatar || defaultAvatar}
+          src={request?.avatar || defaultAvatar}
           width={50}
           height={50}
           alt="user avatar"
@@ -44,7 +42,7 @@ export default function NotificationCard({ request, handleGetFriendRequest }) {
       <div className="info flex-grow">
         <div className="userInfo flex flex-col">
           <div className="user-name text-[20px] font-bold flex items-center justify-start gap-1">
-            {request.senderId.username}
+            {request?.username}
           </div>
 
           <div className="flex justify-between items-center">
@@ -56,13 +54,13 @@ export default function NotificationCard({ request, handleGetFriendRequest }) {
       </div>
       <div className="btnsGroup flex items-center gap-2">
         <button
-          onClick={() => handleAcceptFriendRequest(request._id)}
+          onClick={() => handleAcceptFriendRequest(request?._id)}
           className="accept-btn font-medium  bg-gray-200 text-black rounded-md px-4 py-1"
         >
           Accept
         </button>
         <button
-          onClick={() => handleRejectFriendRequest(request._id)}
+          onClick={() => handleRejectFriendRequest(request?._id)}
           className="decline-btn  font-medium bg-[#6565651b] text-white rounded-md px-4 py-1"
         >
           Decline

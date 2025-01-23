@@ -1,19 +1,39 @@
 "use client";
 import "./globals.css";
 import localFont from "next/font/local";
-import { useRouter, usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import toast, { Toaster } from "react-hot-toast";
+import dynamic from "next/dynamic";
+import { usePathname } from "next/navigation";
+import { useEffect, useMemo } from "react";
+import { Toaster } from "react-hot-toast";
 import { useToggleComponents } from "@/store/useToggleComponents";
 import { useAuthStore } from "@/store/useAuthStore";
-import DescoverFriends from "@/components/DescoverFriends";
-import Notifications from "@/components/Notifications";
-import useWindowWidth from "@/hooks/useWindowWidth";
-import Navbar from "@/components/Navbar";
-import Sidebar from "@/components/Sidebar";
 import useImageHandlerStore from "@/store/useImageHandlerStore";
-import ImageCropperLayer from "@/components/ImageCropperLayer";
-import UserProfile from "@/components/UserProfile";
+import useWindowWidth from "@/hooks/useWindowWidth";
+
+const DiscoverFriends = dynamic(() => import("@/components/DiscoverFriends"), {
+  loading: () => <p>Loading...</p>,
+});
+const Notifications = dynamic(() => import("@/components/Notifications"), {
+  loading: () => <p>Loading...</p>,
+});
+const UserProfile = dynamic(() => import("@/components/UserProfile"), {
+  loading: () => <p>Loading...</p>,
+});
+const Friends = dynamic(() => import("@/components/Friends"), {
+  loading: () => <p>Loading...</p>,
+});
+const Sidebar = dynamic(() => import("@/components/Sidebar"), {
+  loading: () => <p>Loading...</p>,
+});
+const Navbar = dynamic(() => import("@/components/Navbar"), {
+  loading: () => <p>Loading...</p>,
+});
+const ImageCropperLayer = dynamic(
+  () => import("@/components/ImageCropperLayer"),
+  {
+    loading: () => <p>Loading...</p>,
+  }
+);
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -26,24 +46,25 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-const metadata = {
-  title: "Blue Chat",
-  description: "",
-};
-
-const LoadingOverlay = ({ message }) => (
-  <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-60 z-[999999]">
-    <div className="w-[300px] flex items-center justify-center flex-col gap-4 h-[200px] top-[50%] left-[50%] translate-x-[-50%] translate-y-[-60%] rounded-lg bg-gray-900 absolute z-[99999]">
-      <h4 className="text-[18px] font-bold">{message}</h4>
-    </div>
-  </div>
-);
-
 export default function RootLayout({ children }) {
   const protectedRoute = ["/", "/profile"];
   const unProtectedRoute = ["/forgot-password", "/signup", "/login"];
-  const { user, isCheckingAuth, isLoggingOut, logout, checkAuth } =
-    useAuthStore();
+  const windowWidth = useWindowWidth();
+  const pathname = usePathname();
+  const { isUpdatingAvatar } = useImageHandlerStore();
+  const {
+    user,
+    isCheckingAuth,
+    logout,
+    checkAuth,
+    initSocketConnection,
+    cleanupSocket,
+    setupSocketListeners,
+    socket,
+    isLoggingIn,
+    isLoggedIn,
+    onlineUsers,
+  } = useAuthStore();
   const {
     setActiveComponent,
     activeComponent,
@@ -51,25 +72,64 @@ export default function RootLayout({ children }) {
     isToggled,
     reset,
   } = useToggleComponents();
-  const { isUpdatingAvatar } = useImageHandlerStore();
-  const windowWidth = useWindowWidth();
-  const pathname = usePathname();
+
   const components = {
-    descoverFriends: <DescoverFriends setIsToggled={setIsToggled} />,
+    descoverFriends: <DiscoverFriends setIsToggled={setIsToggled} />,
     notifications: <Notifications setIsToggled={setIsToggled} />,
     userProfile: <UserProfile setIsToggled={setIsToggled} />,
+    friends: <Friends setIsToggled={setIsToggled} />,
   };
-  const [currentComponent, setCurrentComponent] = useState(
-    components[activeComponent] || null
-  );
 
-  useEffect(() => {
-    setCurrentComponent(components[activeComponent]);
+  const currentComponent = useMemo(() => {
+    return components[activeComponent] || null;
   }, [activeComponent]);
 
   useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+    if (
+      unProtectedRoute.includes(pathname) &&
+      !user &&
+      !isCheckingAuth &&
+      !isLoggedIn &&
+      !isLoggingIn
+    ) {
+      setIsToggled(false);
+      setActiveComponent("default");
+    }
+  }, [user?._id, isCheckingAuth, isLoggedIn, isLoggingIn, pathname]);
+
+  useEffect(() => {
+    if (!isCheckingAuth && !user?._id) {
+      checkAuth();
+    }
+  }, [checkAuth, user?._id, isLoggedIn]);
+
+  useEffect(() => {
+    if (!socket?.connected && user && !isLoggingIn && !isCheckingAuth) {
+      console.log("Socket connected from layout");
+      initSocketConnection();
+    }
+
+    return () => {
+      if (socket?.connected && user) {
+        cleanupSocket();
+      }
+    };
+  }, [
+    user?._id,
+    initSocketConnection,
+    cleanupSocket,
+    isCheckingAuth,
+    isLoggingIn,
+  ]);
+
+  useEffect(() => {
+    if (!socket || !user) return;
+    setupSocketListeners(socket);
+
+    return () => {
+      socket.off("user-status-update");
+    };
+  }, [socket, onlineUsers, user?._id]);
 
   return (
     <html lang="en">
@@ -77,18 +137,19 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} flex flex-col relative justify-between gap-2 md:justify-between p-2 max-h-[100vh] h-screen overflow-hidden bg-[#000]`}
       >
         <Toaster position="top-center" containerStyle={{ zIndex: 99999999 }} />
-        {(isCheckingAuth && !user) || isLoggingOut ? (
-          <LoadingOverlay message="Loading.." />
-        ) : null}
+
         {isUpdatingAvatar && <ImageCropperLayer />}
+
         {protectedRoute.includes(pathname) && (
           <Navbar
             setIsToggled={setIsToggled}
             setActiveComponent={setActiveComponent}
             user={user}
+            isCheckingAuth={isCheckingAuth}
           />
         )}
-        {isToggled && windowWidth <= 1000 && (
+
+        {isToggled && windowWidth <= 1024 && (
           <div
             onClick={() => setIsToggled(false)}
             className="md:hidden fixed top-0 left-0 w-screen h-screen bg-[#000] bg-opacity-60 z-[9999]"
@@ -96,9 +157,16 @@ export default function RootLayout({ children }) {
             {currentComponent}
           </div>
         )}
+
         <main className="flex flex-grow md:flex-row flex-col-reverse gap-2 max-h-[90%] justify-between items-center md:items-center w-full ">
           {protectedRoute.includes(pathname) && (
-            <Sidebar logout={logout} reset={reset} />
+            <Sidebar
+              logout={logout}
+              reset={reset}
+              user={user}
+              setActiveComponent={setActiveComponent}
+              setIsToggled={setIsToggled}
+            />
           )}
           {children}
         </main>

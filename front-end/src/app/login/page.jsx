@@ -5,27 +5,33 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import * as yup from "yup";
+
 export default function Login() {
-  const { login, isLoggingIn } = useAuthStore();
+  const { login, isLoggingIn, user, socket, isCheckingAuth, isLoggedIn } =
+    useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (values) => {
     try {
-      const res = await login(values?.email, values?.password);
-      if (res?.status === 200) {
-        return router.push("/");
-      }
-      return;
+      await login(values?.email, values?.password);
+      router.push("/");
     } catch (error) {
       console.log(error);
     }
   };
 
+  useEffect(() => {
+    if (user?._id && !isCheckingAuth && isLoggedIn) {
+      router.push("/");
+    }
+  }, [user?._id, socket, isLoggingIn, isCheckingAuth]);
+
   const validationSchema = yup.object().shape({
     email: yup.string().required("Email or Username is required"),
     password: yup.string().required("Password is required"),
   });
+
   const Formik = useFormik({
     initialValues: {
       email: "",
@@ -34,8 +40,9 @@ export default function Login() {
     validationSchema: validationSchema,
     onSubmit: handleSubmit,
   });
+
   return (
-    <section className=" dark:bg-[#000] w-full ">
+    <section className="dark:bg-[#000] w-full">
       <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto min-h-screen lg:py-0">
         <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-[#0e0e0e] dark:border-[#a1a1a12c]">
           <h1 className="text-3xl font-bold leading-tight tracking-tight mt-5 text-center text-gray-900 md:text-2xl dark:text-white">
@@ -61,7 +68,7 @@ export default function Login() {
                   onBlur={Formik.handleBlur}
                   name="email"
                   id="email"
-                  className="bg-[#0000005c] text-[#c9c9c9] placeholder:text-[#ffffff4a] border border-[#ffffff34]  rounded-lg focus:ring-transparent focus:border-[#ffffffa5] transition-all duration-300 outline-none block w-full p-2.5 "
+                  className="bg-[#0000005c] text-[#c9c9c9] placeholder:text-[#ffffff4a] border border-[#ffffff34] rounded-lg focus:ring-transparent focus:border-[#ffffffa5] transition-all duration-300 outline-none block w-full p-2.5"
                   placeholder="name@example.com"
                   required=""
                 />
@@ -72,7 +79,7 @@ export default function Login() {
               <div className="relative">
                 <label
                   htmlFor="password"
-                  className="block ps-1 mb-2 text-sm font-medium text-white "
+                  className="block ps-1 mb-2 text-sm font-medium text-white"
                 >
                   Password
                 </label>
@@ -84,7 +91,7 @@ export default function Login() {
                   onBlur={Formik.handleBlur}
                   id="password"
                   placeholder="••••••••"
-                  className="bg-[#0000005c] text-[#c9c9c9] placeholder:text-[#ffffff4a] border border-[#ffffff34]  rounded-lg focus:ring-transparent focus:border-[#ffffffa5] transition-all duration-300 outline-none block w-full p-2.5 "
+                  className="bg-[#0000005c] text-[#c9c9c9] placeholder:text-[#ffffff4a] border border-[#ffffff34] rounded-lg focus:ring-transparent focus:border-[#ffffffa5] transition-all duration-300 outline-none block w-full p-2.5"
                   required=""
                 />
                 <div
@@ -130,7 +137,7 @@ export default function Login() {
               <div className="flex items-center justify-end">
                 <Link
                   href={"/forgot-password"}
-                  className="text-sm font-medium text-primary-600 hover:underline dark:text-white "
+                  className="text-sm font-medium text-primary-600 hover:underline dark:text-white"
                 >
                   Forgot password?
                 </Link>
@@ -138,15 +145,15 @@ export default function Login() {
               <button
                 disabled={!Formik.isValid || isLoggingIn}
                 type="submit"
-                className="w-full text-black bg-[#eeeeee] hover:bg-[#e0e0e0e2] transition-all duration-300 cursor-pointer focus:ring-4 focus:outline-none  font-bold rounded-lg text-md px-5 py-2.5 text-center dark:focus:ring-primary-900 "
+                className="w-full text-black bg-[#eeeeee] hover:bg-[#e0e0e0e2] transition-all duration-300 cursor-pointer focus:ring-4 focus:outline-none font-bold rounded-lg text-md px-5 py-2.5 text-center dark:focus:ring-primary-900"
               >
                 {isLoggingIn ? "Loading..." : "Login"}
               </button>
-              <p className="text-sm font-light text-white ">
+              <p className="text-sm font-light text-white">
                 Don’t have an account yet ?{" "}
                 <Link
                   href={"/signup"}
-                  className="font-medium text-[#CCC] hover:underline "
+                  className="font-medium text-[#CCC] hover:underline"
                 >
                   Sign up
                 </Link>

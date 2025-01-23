@@ -1,27 +1,49 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useUserStore } from "@/store/useUserStore";
-import { useEffect } from "react";
 import NotificationCard from "./NotificationCard";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function Notifications({ setIsToggled, windowWidth, reset }) {
-  const { getFriendRequest, friendRequests } = useUserStore();
-  const [requests, setRequests] = useState([]);
+  const { getFriendRequest, friendRequests, setFriendRequests } =
+    useUserStore();
+  const { socket } = useAuthStore();
 
   useEffect(() => {
+    console.log("get friend request", friendRequests);
+
     getFriendRequest();
   }, [getFriendRequest]);
+
+  useEffect(() => {
+    if (socket) {
+      const handleNewFriendRequest = async (request) => {
+        console.log("new friend request", request);
+
+        if (friendRequests?.some((r) => r._id === request._id)) return;
+
+        setFriendRequests((prevRequests) => [...prevRequests, request]);
+      };
+
+      socket.on("get-friend-requests", handleNewFriendRequest);
+
+      return () => {
+        socket.off("get-friend-requests", handleNewFriendRequest);
+      };
+    }
+  }, [socket, friendRequests, setFriendRequests]);
+
   return (
     <div
       onClick={(e) => e.stopPropagation()}
-      className="notifications md:w-full md:h-full md:rounded-none pb-4 rounded-lg md:relative absolute  md:translate-x-0 md:translate-y-0 translate-y-[-50%] md:left-0 md:top-0 top-[50%] left-[50%] translate-x-[-50%] w-[90%] h-[90%] lg:bg-transparent bg-[#0d0d0d] border-[.2px] md:border-none border-[#dddddd2d] pt-4 md:pt-5 px- overflow-hidden flex flex-col"
+      className="notifications md:w-full md:h-full md:rounded-none pb-4 rounded-lg md:relative absolute md:translate-x-0 md:translate-y-0 translate-y-[-50%] md:left-0 md:top-0 top-[50%] left-[50%] translate-x-[-50%] w-[90%] h-[90%] lg:bg-transparent bg-[#0d0d0d] border-[.2px] md:border-none border-[#dddddd2d] pt-4 md:pt-5 px- overflow-hidden flex flex-col"
     >
-      <div className="notifications-container  w-full h-full px-3 md:px-4 pb-4  flex flex-col items-center justify-center">
+      <div className="notifications-container w-full h-full px-3 md:px-4 pb-4 flex flex-col items-center justify-center">
         <div className="header flex w-full md:flex-row flex-col items-center justify-start lg:gap-10 gap-3 lg:m-0 ">
           <button
             onClick={() =>
               windowWidth >= 1024 ? reset() : setIsToggled(false)
             }
-            className=" text-white lg:block hidden"
+            className="text-white lg:block hidden"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -43,7 +65,7 @@ export default function Notifications({ setIsToggled, windowWidth, reset }) {
           <div className="title flex items-center gap-4 justify-start w-full">
             <button
               onClick={() => setIsToggled(false)}
-              className=" text-white lg:hidden me-[-5px] mt-[-.5px]"
+              className="text-white lg:hidden me-[-5px] mt-[-.5px]"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -68,27 +90,28 @@ export default function Notifications({ setIsToggled, windowWidth, reset }) {
           </div>
           <div className="filtration flex items-center justify-between w-full">
             <ul className="flex items-center md:gap-4 w-full md:justify-start justify-around">
-              <li className="  font-semibold min-w-[80px] max-w-[100px] text-center bg-[#ecececf0] text-[#141414] px-5 py-1 rounded-md text-[16px]">
+              <li className="font-semibold min-w-[80px] max-w-[100px] text-center bg-[#ecececf0] text-[#141414] px-5 py-1 rounded-md text-[16px]">
                 All
               </li>
-              <li className="  font-semibold min-w-[80px] max-w-[100px] text-center bg-[#69686868] text-[#ddd] px-5 py-1 rounded-md text-[16px]">
+              <li className="font-semibold min-w-[80px] max-w-[100px] text-center bg-[#69686868] text-[#ddd] px-5 py-1 rounded-md text-[16px]">
                 News
               </li>
-              <li className="  font-semibold min-w-[80px] max-w-[100px] text-center bg-[#69686868] text-[#ddd] px-5 py-1 rounded-md text-[16px]">
+              <li className="font-semibold min-w-[80px] max-w-[100px] text-center bg-[#69686868] text-[#ddd] px-5 py-1 rounded-md text-[16px]">
                 Unread
               </li>
             </ul>
           </div>
         </div>
-        <div className="notifications-messages flex flex-col justify-start items-start  w-full md:w-[80%] flex-grow mt-5 overflow-auto">
-          {friendRequests?.length > 0 ? (
+        <div className="notifications-messages flex flex-col justify-start items-start w-full md:w-[80%] flex-grow mt-5 overflow-auto">
+          {friendRequests?.length > 1 ? (
             friendRequests.map((request) => (
-              <NotificationCard
-                key={request._id}
-                request={request}
-                handleGetFriendRequest={getFriendRequest}
-              />
+              <NotificationCard key={request._id} request={request} />
             ))
+          ) : friendRequests?.length === 1 ? (
+            <NotificationCard
+              key={friendRequests[0]?._id}
+              request={friendRequests[0]}
+            />
           ) : (
             <div className="not-found w-full h-full flex items-start justify-center">
               <h3 className="text-[24px] font-bold mt-28">No activity found</h3>

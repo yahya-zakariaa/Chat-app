@@ -3,8 +3,10 @@ import defaultAvatar from "../../public/default-avatar.png";
 import Image from "next/image";
 import { useUserStore } from "@/store/useUserStore";
 import toast from "react-hot-toast";
+import { useAuthStore } from "@/store/useAuthStore";
 export default function UserCard({ user }) {
   const { addFriend, cancelFriendRequest } = useUserStore();
+  const { socket, user: currentUser } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [isRequestPending, setIsRequestPending] = useState(user?.isPending);
   const handleAddFriend = useCallback(
@@ -12,6 +14,7 @@ export default function UserCard({ user }) {
       setIsLoading((prev) => ({ ...prev, [id]: true }));
       try {
         const res = await addFriend(id);
+        socket.emit("send-friend-request", id, currentUser._id);
         toast.success("Request sended");
         setIsRequestPending(true);
       } catch (error) {
