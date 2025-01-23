@@ -93,14 +93,15 @@ export const useAuthStore = create((set, get) => ({
     const { user, socket } = get();
     if (!user?._id) return;
     if (!socket || socket.disconnected || !socket.connected) {
-      const newSocket = io("https://foul-brave-harmonica.glitch.me/api", {
+      const newSocket = io("https://foul-brave-harmonica.glitch.me", {
         query: { userId: user._id },
         reconnection: true,
         reconnectionAttempts: 3,
         reconnectionDelay: 5000,
         autoConnect: true,
         withCredentials: true,
-        credentials: true, // السماح بالكوكيز عبر CORS
+        transports: ["websocket", "polling", "flashsocket"],
+        secure: true,
       });
 
       get().setupSocketListeners(newSocket);
