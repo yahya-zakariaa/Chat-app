@@ -18,6 +18,7 @@ const io = new Server(server, {
     credentials: true,
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type", "Authorization", "Accept", "Origin"],
+    path: "/socket.io",
   },
 });
 
