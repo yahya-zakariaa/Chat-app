@@ -93,26 +93,25 @@ export const useAuthStore = create((set, get) => ({
     const { user, socket } = get();
     if (!user?._id) return;
     if (!socket || socket.disconnected || !socket.connected) {
-      const newSocket = io("https://foul-brave-harmonica.glitch.me", {
+      const newSocket = io("wss://foul-brave-harmonica.glitch.me", {
         query: { userId: user._id },
         reconnection: true,
         reconnectionAttempts: 3,
         reconnectionDelay: 5000,
         autoConnect: true,
         withCredentials: true,
-        transports: ["websocket", "polling", "flashsocket", "xhr-polling"],
         path: "/socket.io",
         secure: true,
       });
 
-      get().setupSocketListeners(newSocket);
       set({ socket: newSocket });
+      get().setupSocketListeners(newSocket);
     } else if (socket.disconnected) {
       socket.connect();
     }
   },
   setupSocketListeners: (socket) => {
-    if (!socket?.connected) return;
+    if (!socket?.connected || !socket) return;
     socket.on("connect", () => {
       socket.emit("user-online");
     });
