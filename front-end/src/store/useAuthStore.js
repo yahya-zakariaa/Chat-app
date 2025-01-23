@@ -100,6 +100,7 @@ export const useAuthStore = create((set, get) => ({
         reconnectionDelay: 5000,
         autoConnect: true,
         withCredentials: true,
+        credentials: true, // السماح بالكوكيز عبر CORS
       });
 
       get().setupSocketListeners(newSocket);
