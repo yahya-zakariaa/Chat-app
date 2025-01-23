@@ -98,10 +98,10 @@ export default function RootLayout({ children }) {
   }, [user?._id, isCheckingAuth, isLoggedIn, isLoggingIn, pathname]);
 
   useEffect(() => {
-    if (!isCheckingAuth && !user?._id) {
+    if (!isCheckingAuth && !user?._id && !isLoggingIn && !isLoggedIn) {
       checkAuth();
     }
-  }, [checkAuth, user?._id, isLoggedIn]);
+  }, [checkAuth, user?._id, isLoggedIn, isLoggingIn]);
 
   useEffect(() => {
     if (!socket?.connected && user && !isLoggingIn && !isCheckingAuth) {
