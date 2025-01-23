@@ -111,7 +111,7 @@ export const useAuthStore = create((set, get) => ({
     }
   },
   setupSocketListeners: (socket) => {
-    if (!socket?.connected || !socket) return;
+    if (!socket?.connected) return;
     socket.on("connect", () => {
       socket.emit("user-online");
     });
