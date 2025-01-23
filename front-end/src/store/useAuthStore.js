@@ -62,8 +62,8 @@ export const useAuthStore = create((set, get) => ({
     try {
       const res = await axiosInstance.post("auth/login", { email, password });
       set({ user: res.data?.data?.user, isLoggedIn: true });
-      get().initSocketConnection();
       showToast("Welcome back");
+      get().initSocketConnection();
     } catch (error) {
       get().handleAuthError(error);
     } finally {

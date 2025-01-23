@@ -22,7 +22,7 @@ export default function Login() {
   };
 
   useEffect(() => {
-    if (user?._id && !isCheckingAuth && isLoggedIn) {
+    if (user?._id && !isCheckingAuth && isLoggedIn && !isLoggingIn) {
       router.push("/");
     }
   }, [user?._id, socket, isLoggingIn, isCheckingAuth]);
