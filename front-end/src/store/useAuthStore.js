@@ -114,7 +114,7 @@ export const useAuthStore = create((set, get) => ({
 
     socket.on("disconnect", (reason) => {
       console.log("Disconnected from server:", reason);
-      get().updateOfflineStatus();
+      get().cleanupSocket();
     });
 
     socket.on("connect_error", (error) => {

@@ -1,7 +1,7 @@
 import axios from "axios";
 const unProtected = ["/login", "/signup", "forgot-password"];
 export const axiosInstance = axios.create({
-  baseURL: "http://localhost:3001/api", //"https://hexagonal-neat-poinsettia.glitch.me/api"
+  baseURL: "https://hexagonal-neat-poinsettia.glitch.me/api", //"http://localhost:3001/api"
   withCredentials: true,
 });
 
