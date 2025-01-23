@@ -101,7 +101,6 @@ export const useAuthStore = create((set, get) => ({
         autoConnect: true,
         withCredentials: true,
         transports: ["websocket", "polling"],
-        path: "/socket.io",
         secure: true,
       });
 
