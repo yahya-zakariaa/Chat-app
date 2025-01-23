@@ -100,7 +100,8 @@ export const useAuthStore = create((set, get) => ({
         reconnectionDelay: 5000,
         autoConnect: true,
         withCredentials: true,
-        transports: ["websocket", "polling", "flashsocket","xhr-polling"],
+        transports: ["websocket", "polling", "flashsocket", "xhr-polling"],
+        path: "/socket.io",
         secure: true,
       });
 
