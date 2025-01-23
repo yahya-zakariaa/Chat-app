@@ -93,7 +93,7 @@ export const useAuthStore = create((set, get) => ({
     const { user, socket } = get();
     if (!user?._id) return;
     if (!socket || socket.disconnected || !socket.connected) {
-      const newSocket = io("http://localhost:3001", {
+      const newSocket = io("https://foul-brave-harmonica.glitch.me", {
         query: { userId: user._id },
         reconnection: true,
         reconnectionAttempts: 3,
