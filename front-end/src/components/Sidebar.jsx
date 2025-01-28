@@ -17,15 +17,15 @@ export default function Sidebar({
   const [toggleSettings, setToggleSettings] = useState(false);
   const { getFriends, friends } = useUserStore();
   const { isCheckingAuth, onlineUsers } = useAuthStore();
-  const [onlinefriends, setOnlineFriends] = useState([]);
+  const [onlineFriends, setOnlineFriends] = useState([]);
 
   useEffect(() => {
     getFriends();
   }, [getFriends]);
 
   useEffect(() => {
-    setOnlineFriends(Array.from(onlineUsers));
-  }, [onlineUsers.size,setOnlineFriends]);
+    setOnlineFriends(onlineUsers);
+  }, [onlineUsers?.length, setOnlineFriends]);
 
   return (
     <div className="sidebar rounded-xl overflow-hidden  flex flex-row md:flex-col md:py-3 justify-between items-center md:h-[100%] lg:w-[5%] md:w-[7%] w-[100%] left-[50%] translate-x-[-50%] md:translate-x-0 md:min-h-full min-h-[11%] flex-shrink    shadow-3xl  bg-[#1a1a1a] md:backdrop-blur-0 backdrop-blur-md  relative md:top-0 md:left-0 z-[999]">
@@ -38,7 +38,8 @@ export default function Sidebar({
               >
                 <span
                   className={`absolute top-2 right-1 w-3 h-3 ${
-                    onlinefriends?.includes(friend?._id)
+                    onlineFriends?.length > 0 &&
+                    onlineFriends?.includes(friend?._id)
                       ? "bg-green-500"
                       : "bg-gray-600"
                   }  rounded-full`}
@@ -187,9 +188,9 @@ export default function Sidebar({
             </li>
             <li className="order-1 md:order-4  px-2 md:rounded-md rounded-full hover:bg-opacity-10 min-h-[50px] md:min-h-[40px] md:w-[70%] w-[50px] justify-center flex items-center ">
               <button
-                onClick={() => {
-                  logout();
-                  router.push("/login");
+                onClick={async () => {
+                  await router.push("/login");
+                  await logout();
                 }}
               >
                 <svg

@@ -10,6 +10,9 @@ import { useAuthStore } from "@/store/useAuthStore";
 import useImageHandlerStore from "@/store/useImageHandlerStore";
 import useWindowWidth from "@/hooks/useWindowWidth";
 
+const Chats = dynamic(() => import("@/components/Chat"), {
+  loading: () => <p>Loading...</p>,
+});
 const DiscoverFriends = dynamic(() => import("@/components/DiscoverFriends"), {
   loading: () => <p>Loading...</p>,
 });
@@ -47,24 +50,13 @@ const geistMono = localFont({
 });
 
 export default function RootLayout({ children }) {
-  const protectedRoute = ["/", "/profile"];
+  const protectedRoute = ["/"];
   const unProtectedRoute = ["/forgot-password", "/signup", "/login"];
   const windowWidth = useWindowWidth();
   const pathname = usePathname();
   const { isUpdatingAvatar } = useImageHandlerStore();
-  const {
-    user,
-    isCheckingAuth,
-    logout,
-    checkAuth,
-    initSocketConnection,
-    cleanupSocket,
-    setupSocketListeners,
-    socket,
-    isLoggingIn,
-    isLoggedIn,
-    onlineUsers,
-  } = useAuthStore();
+  const { user, isCheckingAuth, logout } =
+    useAuthStore();
   const {
     setActiveComponent,
     activeComponent,
@@ -78,6 +70,7 @@ export default function RootLayout({ children }) {
     notifications: <Notifications setIsToggled={setIsToggled} />,
     userProfile: <UserProfile setIsToggled={setIsToggled} />,
     friends: <Friends setIsToggled={setIsToggled} />,
+    chat: <Chats setIsToggled={setIsToggled} />,
   };
 
   const currentComponent = useMemo(() => {
@@ -85,91 +78,56 @@ export default function RootLayout({ children }) {
   }, [activeComponent]);
 
   useEffect(() => {
-    if (
-      unProtectedRoute.includes(pathname) &&
-      !user &&
-      !isCheckingAuth &&
-      !isLoggedIn &&
-      !isLoggingIn
-    ) {
+    if (unProtectedRoute.includes(pathname) && !user?._id && !isCheckingAuth) {
       setIsToggled(false);
       setActiveComponent("default");
     }
-  }, [user?._id, isCheckingAuth, isLoggedIn, isLoggingIn, pathname]);
+  }, [user?._id, isCheckingAuth, pathname]);
 
-  useEffect(() => {
-    if (!isCheckingAuth && !user?._id && !isLoggingIn && !isLoggedIn) {
-      checkAuth();
-    }
-  }, [checkAuth, user?._id, isLoggedIn, isLoggingIn]);
 
-  useEffect(() => {
-    if (!socket?.connected && user && !isLoggingIn && !isCheckingAuth) {
-      console.log("Socket connected from layout");
-      initSocketConnection();
-    }
-
-    return () => {
-      if (socket?.connected && user) {
-        cleanupSocket();
-      }
-    };
-  }, [
-    user?._id,
-    initSocketConnection,
-    cleanupSocket,
-    isCheckingAuth,
-    isLoggingIn,
-  ]);
-
-  useEffect(() => {
-    if (!socket || !user) return;
-    setupSocketListeners(socket);
-
-    return () => {
-      socket.off("user-status-update");
-    };
-  }, [socket, onlineUsers, user?._id]);
 
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} flex flex-col relative justify-between gap-2 md:justify-between p-2 max-h-[100vh] h-screen overflow-hidden bg-[#000]`}
-      >
-        <Toaster position="top-center" containerStyle={{ zIndex: 99999999 }} />
-
-        {isUpdatingAvatar && <ImageCropperLayer />}
-
-        {protectedRoute.includes(pathname) && (
-          <Navbar
-            setIsToggled={setIsToggled}
-            setActiveComponent={setActiveComponent}
-            user={user}
-            isCheckingAuth={isCheckingAuth}
+      <body className={`${geistSans.variable} ${geistMono.variable} `}>
+        <div className="layout flex flex-col relative justify-between gap-2 md:justify-between p-2 max-h-[100vh] h-screen overflow-hidden bg-[#000]">
+          <Toaster
+            position="top-center"
+            containerStyle={{ zIndex: 99999999 }}
           />
-        )}
 
-        {isToggled && windowWidth <= 1024 && (
-          <div
-            onClick={() => setIsToggled(false)}
-            className="md:hidden fixed top-0 left-0 w-screen h-screen bg-[#000] bg-opacity-60 z-[9999]"
-          >
-            {currentComponent}
-          </div>
-        )}
+          {isUpdatingAvatar && <ImageCropperLayer />}
 
-        <main className="flex flex-grow md:flex-row flex-col-reverse gap-2 max-h-[90%] justify-between items-center md:items-center w-full ">
           {protectedRoute.includes(pathname) && (
-            <Sidebar
-              logout={logout}
-              reset={reset}
-              user={user}
-              setActiveComponent={setActiveComponent}
+            <Navbar
               setIsToggled={setIsToggled}
+              setActiveComponent={setActiveComponent}
+              user={user}
+              isCheckingAuth={isCheckingAuth}
             />
           )}
-          {children}
-        </main>
+
+          {isToggled && windowWidth <= 1024 && (
+            <div
+              onClick={() => setIsToggled(false)}
+              className="md:hidden fixed top-0 left-0 w-screen h-screen bg-[#000] bg-opacity-60 z-[9999]"
+            >
+              {currentComponent}
+            </div>
+          )}
+
+          <main className="flex flex-grow md:flex-row overflow-hidden flex-col-reverse gap-2 max-h-[90%] justify-between items-center md:items-center w-full ">
+            {protectedRoute.includes(pathname) && (
+              <Sidebar
+                logout={logout}
+                reset={reset}
+                user={user}
+                setActiveComponent={setActiveComponent}
+                setIsToggled={setIsToggled}
+              />
+            )}
+            {children}
+          </main>
+        </div>
       </body>
     </html>
   );

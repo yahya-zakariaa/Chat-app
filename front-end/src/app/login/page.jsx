@@ -2,30 +2,32 @@
 import React, { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
 import * as yup from "yup";
-
+import { useCookies } from "@/hooks/useCookies";
 export default function Login() {
-  const { login, isLoggingIn, user, socket, isCheckingAuth, isLoggedIn } =
-    useAuthStore();
+  const { login, isLoggingIn, isCheckingAuth, checkAuth } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (values) => {
     try {
-      await login(values?.email, values?.password);
-      router.push("/");
+      const res = await login(values?.email, values?.password);
+      if (res === 200) {
+        return router.push("/");
+      }
     } catch (error) {
       console.log(error);
     }
   };
 
   useEffect(() => {
-    if (user?._id && !isCheckingAuth && isLoggedIn && !isLoggingIn) {
+    if(useCookies("token"))       checkAuth();
+    if (useCookies("token") && !isCheckingAuth) {
       router.push("/");
     }
-  }, [user?._id, socket, isLoggingIn, isCheckingAuth]);
+  }, [checkAuth]);
 
   const validationSchema = yup.object().shape({
     email: yup.string().required("Email or Username is required"),

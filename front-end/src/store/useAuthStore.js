@@ -7,7 +7,7 @@ import { create } from "zustand";
 export const useAuthStore = create((set, get) => ({
   user: null,
   socket: null,
-  onlineUsers: new Set(),
+  onlineUsers: [],
   isLoggedIn: false,
   isSigningUp: false,
   isLoggingIn: false,
@@ -16,9 +16,9 @@ export const useAuthStore = create((set, get) => ({
   isResettingPassword: false,
   isResetCodeSend: false,
   isResetCodeVerified: false,
-  setOnlineFriends: (users) =>
+  setOnlineUsers: (users) =>
     set({
-      onlineUsers: new Set(Array.isArray(users) ? users : []),
+      onlineUsers: users || [],
     }),
   setIsCheckingAuth: (value) => set({ isCheckingAuth: value }),
 
@@ -26,6 +26,7 @@ export const useAuthStore = create((set, get) => ({
     set({ isCheckingAuth: true });
     try {
       const res = await axiosInstance.get("/auth/check-auth");
+      console.log("checked auth");
       set({ user: res?.data?.data?.user, isLoggedIn: true });
     } catch (error) {
       get().handleAuthError(error);
@@ -54,7 +55,11 @@ export const useAuthStore = create((set, get) => ({
   },
 
   login: async (email, password) => {
-    if (get().isLoggingIn || get().isLoggedIn) return;
+    if (
+      get().isLoggingIn ||
+      (get().isLoggedIn && (get().user._id || !isCheckingAuth))
+    )
+      return;
 
     set({ isLoggingIn: true });
     showToast("please wait..", "loading");
@@ -62,8 +67,11 @@ export const useAuthStore = create((set, get) => ({
     try {
       const res = await axiosInstance.post("auth/login", { email, password });
       set({ user: res.data?.data?.user, isLoggedIn: true });
+      if (get().socket || !get().socket?.connected) {
+        await get().initSocketConnection();
+      }
       showToast("Welcome back");
-      get().initSocketConnection();
+      return res.status;
     } catch (error) {
       get().handleAuthError(error);
     } finally {
@@ -76,7 +84,7 @@ export const useAuthStore = create((set, get) => ({
     set({ isLoggingOut: true });
     try {
       await axiosInstance.post("auth/logout");
-      get().cleanupSocket();
+      await get().cleanupSocket();
       showToast("Logged out");
     } catch (error) {
       showToast(error, "error");
@@ -85,23 +93,20 @@ export const useAuthStore = create((set, get) => ({
         isLoggingOut: false,
         user: null,
         isLoggedIn: false,
-        onlineUsers: new Set(),
+        onlineUsers: [],
       });
     }
   },
   initSocketConnection: () => {
     const { user, socket } = get();
     if (!user?._id) return;
-    if (!socket || socket.disconnected || !socket.connected) {
-      const newSocket = io("https://hexagonal-neat-poinsettia.glitch.me", {
+    if (!socket || !socket.connected) {
+      const newSocket = io("http://localhost:3001", {
         query: { userId: user._id },
         reconnection: true,
         reconnectionAttempts: 3,
         reconnectionDelay: 5000,
         autoConnect: true,
-        withCredentials: true,
-        transports: ["websocket", "polling"],
-        secure: true,
       });
 
       set({ socket: newSocket });
@@ -111,7 +116,9 @@ export const useAuthStore = create((set, get) => ({
     }
   },
   setupSocketListeners: (socket) => {
-    if (!socket?.connected) return;
+    if (!socket) return;
+    console.log("socket listeners setup");
+
     socket.on("connect", () => {
       socket.emit("user-online");
     });
@@ -126,22 +133,22 @@ export const useAuthStore = create((set, get) => ({
       toast.error("Failed to connect to the server.");
     });
 
-    socket.on("get-online-users", ({ users }) => {
-      console.log("online friends:", users);
-      if (users?.length === 0 || !users || users === "undefined") return;
-      if (get().onlineUsers.size > 0) return;
-      set({ onlineUsers: new Set(users) });
+    socket.on("get-online-users", (users) => {
+      const { onlineUsers } = get();
+      if (users?.length === 0 || users === "undefined") return;
+      console.log("online users:", users);
+      if (onlineUsers?.length > 0) return;
+      set({ onlineUsers: users });
     });
 
     socket.on("user-status-update", (user) => {
-      console.log("friend", user.userId, "is", user.status);
+      const { onlineUsers, setOnlineUsers } = get();
+      console.log("user", user.userId, "is", user.status);
       if (user.status === "online") {
-        if (get().onlineUsers.has(user.userId)) return;
-        get().setOnlineFriends([...Array.from(get().onlineUsers), user.userId]);
+        if (onlineUsers.includes(user?.userId)) return;
+        setOnlineUsers([...onlineUsers, user.userId] || []);
       } else if (user.status === "offline") {
-        get().setOnlineFriends(
-          Array.from(get().onlineUsers).filter((id) => id !== user.userId)
-        );
+        setOnlineUsers(onlineUsers.filter((id) => id !== user.userId) || []);
       }
     });
   },
@@ -152,11 +159,12 @@ export const useAuthStore = create((set, get) => ({
       socket.off();
       socket.disconnect();
       set({ socket: null });
+      set({ onlineUsers: [] });
     }
+    console.log("socket disconnected");
   },
 
   handleAuthError: (error) => {
-    console.log(error);
     const message = error.response?.data?.message || "Something went wrong";
     set({ user: null, isLoggedIn: false });
     get().cleanupSocket();

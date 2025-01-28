@@ -8,7 +8,7 @@ export default function Friends({ setIsToggled, windowWidth, reset }) {
     useUserStore();
   const { onlineUsers } = useAuthStore();
   const [activeFriendId, setActiveFriendId] = useState(null);
-  const [onlinefriends, setOnlineFriends] = useState([]);
+  const [onlineFriends, setOnlineFriends] = useState([]);
 
   const toggleActions = (id) => {
     setActiveFriendId((prevId) => (prevId === id ? null : id));
@@ -17,8 +17,8 @@ export default function Friends({ setIsToggled, windowWidth, reset }) {
     getFriends();
   }, [getFriends]);
   useEffect(() => {
-    setOnlineFriends(Array.from(onlineUsers));
-  }, [onlineUsers.size, setOnlineFriends]);
+    setOnlineFriends(onlineUsers);
+  }, [onlineUsers.length, setOnlineFriends]);
 
   return (
     <div
@@ -76,7 +76,10 @@ export default function Friends({ setIsToggled, windowWidth, reset }) {
                   toggleActions={toggleActions}
                   activeFriendId={activeFriendId}
                   removeFriend={removeFriend}
-                  isOnline={onlinefriends?.includes(friend?._id)}
+                  isOnline={
+                    onlineFriends.length > 0 &&
+                    onlineFriends?.includes(friend?._id)
+                  }
                 />
               ))
             ) : (

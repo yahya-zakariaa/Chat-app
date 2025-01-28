@@ -32,16 +32,16 @@ export default function DiscoverFriends({ setIsToggled, windowWidth, reset }) {
   }, 500);
   useEffect(() => {
     descoverUsers();
-  }, [descoverUsers,descoveredUsers?.length]);
+  }, [descoverUsers, descoveredUsers?.length]);
   return (
     <div
       onClick={(e) => e.stopPropagation()}
-      className="descover-friends md:w-full md:h-full md:rounded-none pb-4 rounded-lg md:relative absolute  md:translate-x-0 md:translate-y-0 translate-y-[-50%] md:left-0 md:top-0 top-[50%] left-[50%] translate-x-[-50%] w-[90%] h-[90%] lg:bg-transparent bg-[#0d0d0d] border-[.2px] md:border-none border-[#dddddd2d] pt-4 px-2 overflow-hidden flex flex-col"
+      className="descover-friends md:w-full md:h-full md:rounded-none pb-4 rounded-lg md:relative absolute  md:translate-x-0 md:translate-y-0 translate-y-[-50%]  md:left-0 md:top-0 top-[50%] left-[50%] translate-x-[-50%] w-[90%] h-[90%] lg:bg-transparent bg-[#0d0d0d] border-[.2px] md:border-none border-[#dddddd2d] pt-4 px-2 overflow-hidden flex flex-col"
     >
       <div className="header w-full mt- h-fit flex items-center justify-start gap-2">
         <button
           onClick={() => (windowWidth >= 1024 ? reset() : setIsToggled(false))}
-          className=" text-white lg:hidden"
+          className=" text-white "
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

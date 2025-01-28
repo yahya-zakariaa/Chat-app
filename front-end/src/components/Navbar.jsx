@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import defaultAvatar from "../../public/default-avatar.png";
 import Image from "next/image";
-import { useAuthStore } from "@/store/useAuthStore";
 
 export default function Navbar({
   setActiveComponent,
@@ -10,7 +9,7 @@ export default function Navbar({
   isCheckingAuth,
 }) {
   return (
-    <nav className=" w-[100%] md:px-4 px-3  rounded-xl mx-auto flex-shrink  h-[10%] flex justify-between items-center bg-[#1a1a1a]">
+    <nav className=" w-[100%] md:px-4 px-3  rounded-xl mx-auto  min-h-[10%]  h-[10%] flex justify-between items-center bg-[#1a1a1a]">
       <div className="userProfile flex items-center">
         {user && !isCheckingAuth ? (
           <button
@@ -43,7 +42,7 @@ export default function Navbar({
             <li aria-label="Add new friend">
               <button
                 onClick={() => {
-                  setActiveComponent("descoverFriends");
+                  setActiveComponent("discoverFriends");
                   setIsToggled(true);
                 }}
                 aria-label="Add new friend"
